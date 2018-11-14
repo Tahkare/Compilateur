@@ -65,12 +65,26 @@ L'étiquette est dans l'en-tête.
 La gestion des switch se fait avec la création d'une table de sauts quand on rencontre le switch.
 Il n'est pas possible de faire une assignation multiple avec un champ d'une structure union pour le moment.
 
+Partie 4.1:
+L'appel de procédure a été réalisé par la création d'une instruction procédure.
+Un type TypVoid a été ajouté pour quand le type de retour d'une procédure n'est pas spécifié.
+Print et main ont été uniformisés et le code mips va automatiquement appeler la fonction main_int (à cause de la surcharge).
+La surcharge a été réalisée en renommant les fonctions avec le type des arguments à la chaine.
+La différence entre les conventions est faite avec l'ajout d'un booléen de Source vers Typed.
+Les appels terminaux sont détectés dans GotoToFlat et sont distingués par deux instructions et deux expressions en Flat.
+Les fonctions ont été modifiées pour lire le premier argument et son type dans a0 et a1 et le deuxième et son type dans a2 et a3.
+La valeur de retour et son type sont dans v0 et v1.
+
+Partie 4.2:
+Le parser a été légèrement adapté pour que main et les blocs puissent avoir des variables locales.
+GotoToFlat, FlatAST et FlatToMips ont été ajoutés pour la représentation trois addresses.
+Les 4 premières variables locales d'une fonction et leurs types sont stockés dans les registres t2 à t9.
 
 J'ai tout réalisé par moi-même.
 
 Le preprocessing s'exécute avec l'option -pp
 ex : ./compilo -pp test.cid
 
-Les extensions suivantes ne sont plus entièrement supportées :
+Les extensions suivantes ne sont plus supportées :
 	GotoInterpreter.ml (TP 1.1)
 Les autres extensions ont été mises à jour pour supporter les nouvelles constructions du langage
