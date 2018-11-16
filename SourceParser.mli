@@ -32,6 +32,7 @@ type token =
   | IDENT of (string)
   | GT
   | GE
+  | FUN
   | FOR
   | EQUAL
   | EOF
@@ -50,6 +51,7 @@ type token =
   | BREAK
   | BOOLEAN
   | BEGIN
+  | ARROW
   | AND
 
 (* This exception is raised by the monolithic API functions. *)

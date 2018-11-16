@@ -16,7 +16,7 @@
       [	"main", MAIN; "true", CONST_BOOL(true); "false", CONST_BOOL(false); "boolean", BOOLEAN; "integer", INTEGER;
 	    "if", IF; "else", ELSE; "var", VAR; "while", WHILE; "for", FOR; "break", BREAK;
 		"continue", CONTINUE; "elif", ELIF; "new", NEW; "struct", STRUCT; "immutable", IMMUTABLE; "union", UNION;
-        "switch", SWITCH; "case", CASE; "default", DEFAULT; "return", RETURN;
+        "switch", SWITCH; "case", CASE; "default", DEFAULT; "return", RETURN; "fun", FUN;
       ] ;
     fun s ->
       (* On cherche la chaîne [s] dans la table. Si on trouve un mot-clé alors
@@ -28,7 +28,7 @@
 }
 
 (* Raccourci : caractères alphabétiques *)
-let alpha = ['a'-'z' 'A'-'Z' '_']
+let alpha = ['a'-'z' 'A'-'Z' '_' '0'-'9']
 let digit = ['0'-'9']
 
 (* Expressions régulières définissant les lexèmes *)
@@ -44,7 +44,7 @@ rule token = parse
 	  { chars := !chars+1; token lexbuf }
   (* Les chaînes alphabétiques sont traitées par la fonction [id_or_keyword]
      pour être associées à des mots-clés ou des identifiants. *)
-  | alpha+
+  | ['a'-'z' 'A'-'Z']alpha*
       { chars := !chars+(lexeme_end lexbuf)-(lexeme_start lexbuf); id_or_keyword (lexeme lexbuf) }
   (* Début et fin de bloc *)
   | "{"
@@ -60,6 +60,8 @@ rule token = parse
   | digit+
 	  { chars := !chars+(lexeme_end lexbuf)-(lexeme_start lexbuf); CONST_INT (int_of_string(lexeme lexbuf)) }
   (* Opérateurs *)
+  | "->"
+      { chars := !chars+2; ARROW }
   | "+"
 	  { chars := !chars+1; PLUS }
   | "-"

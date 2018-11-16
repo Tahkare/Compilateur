@@ -6,22 +6,20 @@ type localised_expression = {
 }
 
 and expression =
-  | Literal  of literal
-  | Location of location
-  | UnaryOp  of unaryOp  * localised_expression
-  | BinaryOp of binaryOp * localised_expression * localised_expression
-  | NewArray of localised_expression * typ
-  | NewRecord of string
-  | FunCall  of identifier * localised_expression list
+  | Literal  	of literal
+  | Location 	of location
+  | UnaryOp  	of unaryOp  * localised_expression
+  | BinaryOp 	of binaryOp * localised_expression * localised_expression
+  | NewArray 	of localised_expression * typ
+  | NewRecord 	of string
+  | FunCall  	of identifier * localised_expression list
 
 and location =
   | Identifier  of identifier
   | ArrayAccess of localised_expression * localised_expression
   | FieldAccess of localised_expression * string
 
-let mk_expr expr l c = { expr = expr; e_pos = l, c }
-
-type localised_instruction = {
+and localised_instruction = {
   instr : instruction;
   locals : typ Symb_Tbl.t;
   i_pos : int * int;
@@ -43,6 +41,7 @@ and instruction =
   | ProcCall 	of identifier * localised_expression list
   | TypeCheck	of localised_expression * localised_expression
   
+let mk_expr expr l c = { expr = expr; e_pos = l, c }
 let mk_instr instr vars l c = { instr = instr; locals = vars; i_pos = l, c }
 
 type function_info = {

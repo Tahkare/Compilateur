@@ -16,6 +16,7 @@
   let union_pointer = ref Symb_Tbl.empty
   let struct_pointer = ref Symb_Tbl.empty
   let initializations = ref []
+  let anonf_pointer = ref Symb_Tbl.empty
   
 %}
 
@@ -44,6 +45,7 @@
 %token UNION SWITCH CASE
 %token DEFAULT
 %token RETURN
+%token FUN ARROW
 
 %left OR
 %left AND
@@ -82,6 +84,7 @@ prog:
 						make_seq tl instr)
 		in
 	    match main with instr,loc_vars -> let main = make_seq !initializations instr in
+	    let functions = Symb_Tbl.fold (fun key value tbl -> Symb_Tbl.add key value tbl) !anonf_pointer functions in
 		{ globals = Symb_Tbl.add "arg" TypInt vars; structs = !struct_pointer; union = !union_pointer; functions = Symb_Tbl.add "main" {signature={return=TypInt;formals=["arg",TypInt]};code=main;locals=loc_vars;} functions } }
 ;
 
@@ -430,6 +433,10 @@ expression:
 | e1=localised_expression; SET_INIT; e2=localised_expression { BinaryOp(LEq,e1,e2) }
 | MINUS; e1=localised_expression { UnaryOp(Minus,e1) }
 | NOT; e1=localised_expression { UnaryOp(Not,e1) }
+| LP; FUN; t=type_all; LP; p=parameters; RP; ARROW; i=localised_instruction; RP; LP; a=arguments; RP { counter := !counter+1;
+																									   let name = ("_anon"^(string_of_int !counter)) in
+																									   anonf_pointer := Symb_Tbl.add name {signature={return=t; formals=p}; code=i; locals=Symb_Tbl.empty} !anonf_pointer;
+																									   FunCall(Id(name),a) }
 | i=IDENT; LP; a=arguments; rp { FunCall(Id(i),a) }
 | error { let pos = $startpos in
           let message = Printf.sprintf "Syntax error at %d, %d : expression not properly formed" pos.pos_lnum (pos.pos_cnum - pos.pos_bol)
