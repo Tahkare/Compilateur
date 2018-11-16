@@ -205,6 +205,235 @@ let translate_program program =
 	@@ li v1 0
 	@@ jr ra
 	
+	and logic_equality =
+	   label "logic_equality"
+	@@ beq a1 a3 "le_same"	(* teste si les valeurs sont de même type *)
+	@@ li v0 0
+	@@ jr ra
+    @@ label "le_same"
+	@@ bgtz a1 "le_block"	(* va à block si ce sont des pointeurs *)
+	@@ beq a0 a2 "le_same_true" (* sinon, teste si les valeurs sont identiques *)
+	@@ li v0 0
+	@@ jr ra
+	@@ label "le_same_true"
+	@@ li v0 (-1)
+	@@ jr ra
+	@@ label "le_block"		(* block va prendre la taille de chaque tableau *)
+	@@ lw t0 (-4) a0
+	@@ lw t1 (-4) a2
+	@@ move t2 t0
+	@@ move t3 t1
+	@@ srl t0 t0 16
+	@@ srl t1 t1 16
+	@@ sll t2 t2 24
+	@@ srl t2 t2 24
+	@@ sll t3 t3 24
+	@@ srl t3 t3 24
+	@@ beq t0 t1 "le_block_same_length"	(* teste l'égalité de taille *)
+	@@ li v0 0
+	@@ jr ra
+	@@ label "le_block_same_length"
+	@@ beq t2 t3 "le_block_same"		(* teste que ce soient bien les mêmes tags *)
+	@@ li v0 0
+	@@ jr ra
+	@@ label "le_block_same"
+	@@ li t1 0
+	@@ li t2 0
+	@@ label "le_block_same_loop"	(* boucle qui va parcourir les deux tableaux et rappeler à chaque fois *)
+	@@ sw ra 0 sp					(* la fonction sur a[i] et b[i] *)
+	@@ sw a0 4 sp
+	@@ sw a2 8 sp
+	@@ addi sp sp 12
+	@@ add a0 a0 t2
+	@@ lw a1 4 a0
+	@@ lw a0 0 a0
+	@@ add a2 a2 t2
+	@@ lw a3 4 a2
+	@@ lw a2 0 a2
+	@@ save_to_stack_fun
+	@@ jal "logic_equality"
+	@@ get_from_stack
+	@@ bnez v0 "le_bsl_end"			(* si l'appel renvoie vrai, on passe au test de boucle sinon on renvoie faux *)
+	@@ li v0 0
+	@@ lw ra (-12) sp
+	@@ jr ra
+	@@ label "le_bsl_end"
+	@@ subi sp sp 12
+	@@ lw ra 0 sp
+	@@ lw a0 4 sp
+	@@ lw a2 8 sp
+	@@ addi t1 t1 1
+	@@ addi t2 t2 8
+	@@ bne t0 t1 "le_block_same_loop"	(* si on n'a pas fini d'itérer, on continue *)
+	@@ li v0 (-1)	(* sinon on renvoie vrai *)
+	@@ jr ra
+	
+	and dynamic_alloc =
+	   comment "malloc"
+    @@ label "malloc_int"
+	@@ sw ra 0 sp
+	@@ addi sp sp 4
+	@@ li t0 8 
+	@@ mul t0 a0 t0
+	@@ addi t0 t0 4		(* t0 = taille à allouer *)
+	@@ la t1 "__next"	
+	@@ lw t2 0 t1		(* t2 = addresse du prochain bloc libre *)
+	@@ label "malloc_check"		
+	@@ lw t4 0 t2		(* t4 = valeur de la première case *)
+	@@ la t3 "__end"
+	@@ lw t3 0 t3		(* t3 = addresse de fin *)
+	@@ blt t2 t3 "no_expansion" (* on regarde si on a atteint end ou pas pour appeler l'extension de mémoire *)
+	@@ label "malloc_oom"
+	@@ sw a0 0 sp
+	@@ addi sp sp 4
+	@@ save_to_stack_fun
+	@@ jal "expand_memory"
+	@@ get_from_stack
+	@@ subi sp sp 4
+	@@ lw a0 0 sp
+	@@ jal "malloc_int"	(* on va rappeler l'allocation après extension pour mettre à jour la valeur de next *)
+	@@ subi sp sp 4
+	@@ lw ra 0 sp
+	@@ jr ra
+	@@ label "no_expansion"
+	@@ beqz t4 "malloc_check_size"	(* si le début du bloc vaut 0, on va regarder s'il est assez grand *)
+	@@ srl t4 t4 16		(* sinon, on va ajouter sa taille à next pour accéder au bloc suivant *)
+	@@ li t5 8
+	@@ mul t4 t4 t5
+	@@ addi t4 t4 4
+	@@ add t2 t2 t4
+	@@ b "malloc_check"		(* puis on revérifie pour le bloc suivant *)
+	@@ label "malloc_check_one" 
+	@@ lw t5 0 t4
+	@@ beq t5 t3 "malloc_oom" 
+	@@ bnez t5 "malloc_check" (* si la case ne vaut pas zéro, c'est le début d'un bloc occupé et on appelle check pour passer au bloc suivant *)
+	@@ addi t4 t4 4				(* sinon, on fait avancer les compteurs *)
+	@@ subi t6 t6 4
+	@@ bnez t6 "malloc_check_one"
+	@@ move v0 t2
+	@@ addi v0 v0 4
+	@@ sw t4 0 t1
+	@@ b "malloc_ok"
+	@@ label "malloc_check_size" (* ici, on vérifie si un bloc vide contient assez de cases *)
+	@@ move t6 t0
+	@@ move t4 t2
+	@@ b "malloc_check_one" (* on appelle la vérification d'une case *)
+	@@ label "malloc_ok"
+	@@ sll a0 a0 16 
+	@@ sw a0 (-4) v0
+	@@ subi sp sp 4
+	@@ lw ra 0 sp
+	@@ jr ra
+	
+	@@ comment "free"
+    @@ label "free_array_of_any"
+	@@ lw t0 (-4) a0	(* on prend la taille du bloc *)
+	@@ srl t0 t0 16
+	@@ li t1 0
+	@@ sw t1 (-4) a0
+	@@ move t2 a0
+	@@ b "free_check"
+	@@ label "free_one"	(* on va stocker 0 dans toutes les cases du tableau *)
+	@@ sw t1 0 t2
+	@@ sw t1 4 t2
+	@@ addi t2 t2 8
+	@@ subi t0 t0 1
+	@@ label "free_check"
+	@@ bnez t0 "free_one"
+	@@ la t1 "__next"
+	@@ lw t0 0 t1
+	@@ slt t2 a0 t0		(* si l'addresse du bloc est inférieure à next, next prend sa valeur *)
+	@@ beqz t2 "free_end" 
+	@@ sw a0 0 t1
+	@@ label "free_end"
+	@@ jr ra
+	
+	@@ comment "sweep"
+    @@ label "sweep"
+	@@ la t0 "__begin"
+	@@ lw t0 0 t0	(* t0 = addresse actuelle du sweep *)
+	@@ la t1 "__end"
+	@@ lw t1 0 t1	(* t1 = addresse de fin *)
+	@@ b "sweep_cond"
+	@@ label "sweep_loop"
+	@@ lw t2 0 t0 (* t2 = value de la case actuelle *)
+	@@ bnez t2 "sweep_not_zero"	(* si la case vaut zéro, on va à la case suivante sinon, on va à la partie qui gère le sweep d'un tableau *)
+	@@ addi t0 t0 4
+	@@ b "sweep_cond"
+	@@ label "sweep_not_zero"
+	@@ srl t3 t2 16 (* t3 = taille de l'array *)
+	@@ sll t2 t2 16
+	@@ srl t2 t2 24 (* t2 = marked *)
+	@@ bnez t2 "sweep_goto_next" (* si le tableau est marqué, on va au suivant sinon on va appeler free *)
+	@@ addi a0 t0 4
+	@@ save_to_stack_fun
+	@@ jal "free_array_of_any"
+	@@ get_from_stack
+	@@ b "sweep_cond"
+	@@ label "sweep_goto_next"	(* on prend la taille du tableau et on l'ajoute à l'addresse dans t0 *)
+	@@ lw t2 0 t0
+	@@ subi t2 t2 256 (* on enlève le marquage *)
+	@@ sw t2 0 t0
+	@@ li t4 8
+	@@ mul t3 t3 t4
+	@@ addi t3 t3 4
+	@@ add t0 t0 t3
+	@@ label "sweep_cond"
+	@@ blt t0 t1 "sweep_loop"
+	@@ jr ra
+	
+	@@ comment "mark"
+	@@ label "mark"
+	@@ lw t0 (-4) a0	(* on récupère la taille de l'array *)
+	@@ srl t2 t0 16		(* t2 = taille *)
+	@@ sll t1 t0 16		(* t1 = marked *)
+	@@ srl t1 t1 24
+	@@ bnez t1 "marked"	(* si le bloc n'est pas marqué, on le marque *)
+	@@ addi t0 t0 256
+	@@ sw t0 (-4) a0
+	@@ label "marked"
+	@@ li t1 0			(* t1 = compteur *)
+	@@ b "mark_cond"
+	@@ label "mark_loop"			(* on itère sur le bloc pour appeler récursivement mark sur *)
+	@@ lw t3 0 a0					(* les valeurs de pointeurs *) 
+	@@ lw t4 4 a0
+	@@ li t5 1
+	@@ bne t4 t5 "mark_loop_no"		(* si n'est pas un array, on passe cette partie de la boucle *)
+	@@ sw ra 0 sp
+	@@ sw a0 4 sp
+	@@ addi sp sp 8
+	@@ save_to_stack_fun
+	@@ lw a0 0 a0
+	@@ jal "mark"
+	@@ get_from_stack
+	@@ subi sp sp 8
+	@@ lw ra 0 sp
+	@@ lw a0 4 sp
+	@@ label "mark_loop_no"
+	@@ addi a0 a0 8
+	@@ addi t1 t1 1
+	@@ label "mark_cond"
+	@@ bne t1 t2 "mark_loop"
+	@@ jr ra
+
+    @@ comment "expand_memory"
+    @@ label "expand_memory"
+	@@ sw ra 0 sp
+	@@ addi sp sp 4
+	@@ (Symb_Tbl.fold (fun var t code -> (match t with
+										 | TypInt | TypBool -> code
+										 | _ -> la t0 var @@ lw a0 0 t0 @@ jal "mark" @@ code)) program.globals nop)
+	@@ jal "sweep"
+	@@ li v0 9
+	@@ li a0 500
+	@@ syscall
+	@@ addi v0 v0 500
+	@@ la t0 "__end"
+	@@ sw v0 0 t0
+	@@ subi sp sp 4
+	@@ lw ra 0 sp
+	@@ jr ra
+	
 	in
 	(* edit pour stocker dans t2-t9 avec un compteur *)
 	let fun_code = Symb_Tbl.fold (fun id f code -> let args = f.signature.formals in let recs = f.recursive in let locals = Symb_Tbl.fold (fun key value l -> (key,value)::l) f.locals [] in
@@ -223,7 +452,7 @@ let translate_program program =
 									label id @@ (if recs then sw ra 0 sp @@ sw fp 4 sp @@ addi sp sp 8 else nop) @@ Pervasives.fst vars_decl @@ translate_instruction f.code recs args locals @@ fun_return @@ code
 					) program.functions nop in
 	
-	let text = init @@ predefined @@ fun_code @@ built_ins in
+	let text = init @@ predefined @@ fun_code @@ logic_equality @@ dynamic_alloc @@ built_ins in
 	let data = label "__next" @@ dword[0] @@ label "__begin" @@ dword[0] @@ label "__end" @@ dword [0] @@ 
   (Symb_Tbl.fold
     (fun var t code -> let s = (match t with

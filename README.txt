@@ -80,11 +80,16 @@ Le parser a été légèrement adapté pour que main et les blocs puissent avoir
 GotoToFlat, FlatAST et FlatToMips ont été ajoutés pour la représentation trois addresses.
 Les 4 premières variables locales d'une fonction et leurs types sont stockés dans les registres t2 à t9.
 
+
+J'ai également ajouté en plus la possibilité de définir des fonctions anonymes dans des expressions avec la syntaxe :
+(fun *type* (*params*) -> *instr*)(*args*)
+
+
 J'ai tout réalisé par moi-même.
 
 Le preprocessing s'exécute avec l'option -pp
 ex : ./compilo -pp test.cid
 
-Les extensions suivantes ne sont plus supportées :
+Les extensions suivantes ne sont plus entièrement supportées :
 	GotoInterpreter.ml (TP 1.1)
 Les autres extensions ont été mises à jour pour supporter les nouvelles constructions du langage
