@@ -104,7 +104,8 @@ and type_location immutable switch name locals l = match l with
   | Src.Identifier(Id(s)) -> 	let u = Symb_Tbl.find name !context.function_signatures in
 								let t = (try find_type s locals Local_var
 										 with Local_var -> (try find_type s u.formals Global_var
-															with Global_var -> Symb_Tbl.find s !context.identifier_types
+															with Global_var -> (try Symb_Tbl.find s !context.identifier_types
+																				with Not_found -> failwith s)
 														   )
 										) in Typed.({loc = Typed.Identifier(Id(s)); lt = t})
   | Src.ArrayAccess(f1,f2) -> 	let t1 = type_expression switch name locals f1 in
@@ -112,7 +113,7 @@ and type_location immutable switch name locals l = match l with
 								assert_type TypInt Typed.(t2.t) Src.(f2.e_pos);
 								let t3 = (match Typed.(t1.t) with 
 										| TypArray(v) -> v 
-										| _ -> failwith "Expected an array type" )in
+										| _ -> failwith (tts (Typed.(t1.t))) )in
 								Typed.({loc = Typed.ArrayAccess(t1,t2); lt = t3})
   | Src.FieldAccess(f,s) -> 	let (check,loc,tag) = switch in
 								let t = type_expression switch name locals f in
@@ -194,6 +195,7 @@ let type_program p =
 									 let f = Symb_Tbl.add "print" {return=TypVoid; formals=["x", TypInt]} f in
 									 let f = Symb_Tbl.add "free" {return=TypVoid; formals=["x", TypArray(TypAny)]} f in
 									 let f = Symb_Tbl.add "malloc" {return=TypArray(TypAny); formals=["x", TypInt]} f in
+									 let f = Symb_Tbl.add "scan_int" {return=TypInt; formals=[]} f in
 									 (Symb_Tbl.fold (fun id f tbl -> Symb_Tbl.add id Src.(f.signature) tbl) Src.(p.functions) f))
 			 };
   let globals = Src.(p.globals) in

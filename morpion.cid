@@ -1,0 +1,105 @@
+// Display functions
+display (integer[][] tab) {
+	display_line(tab[0]);
+	display_separator();
+	display_line(tab[1]);
+	display_separator();
+	display_line(tab[2]);
+	print(13);
+	print(10)
+}
+
+display_line(integer[] tab) {
+  display_aux(tab[0]);
+  print(124);
+  display_aux(tab[1]);
+  print(124);
+  display_aux(tab[2]);
+  print(13);
+  print(10)
+}
+
+display_separator() {
+  var integer i;
+  for(i:=0,i<5,i:=i+1) {
+    print(45)
+  };
+  print(13);
+  print(10)
+}
+
+display_aux (integer a) {
+  if (a==1) {
+    print(88)
+  } elif (a==2) {
+    print(79)
+  } else {
+    print(32)
+  }
+}
+// End of display functions
+
+// Win condition check
+boolean check_win(integer[][] tab) {
+	var integer[] tmp;
+	if (check_line(tab[0])) {
+	  return(true)
+	} elif (check_line(tab[1])) {
+	  return(true)
+	} elif (check_line(tab[2])) {
+	  return(true)
+	} else {
+	  tmp := new integer[3];
+	  tmp[0],tmp[1],tmp[2] := tab[0][0],tab[1][0],tab[2][0];
+	  if (check_line(tmp)) {
+	    return(true)
+	  };
+	  tmp[0],tmp[1],tmp[2] := tab[0][1],tab[1][1],tab[2][1];
+	  if (check_line(tmp)) {
+	    return(true)
+	  };
+	  tmp[0],tmp[1],tmp[2] := tab[0][2],tab[1][2],tab[2][2];
+	  if (check_line(tmp)) {
+	    return(true)
+	  };
+	  tmp[0],tmp[1],tmp[2] := tab[0][0],tab[1][1],tab[2][2];
+	  if (check_line(tmp)) {
+	    return(true)
+	  };
+	  tmp[0],tmp[1],tmp[2] := tab[0][2],tab[1][1],tab[2][0];
+	  if (check_line(tmp)) {
+	    return(true)
+	  };
+	};
+	return(false)
+}
+
+boolean check_line(integer[] tab) {
+  if (tab[0]==tab[1] && tab[1]==tab[2] && tab[0] != 0) {
+    return(true)
+  } else {
+    return(false)
+  }
+}
+// End of win condition check
+
+main {
+  var integer winner;
+  var integer player;
+  var integer[][] tab;
+  winner := 0;
+  player := 1;
+  tab := new integer[3][3];
+  while(winner==0) {
+     var integer coup;
+	 coup := scan_int();
+	 tab[coup/3][coup%3] := player;
+	 display(tab);
+	 if(check_win(tab)){
+	   winner := player
+	 } else {
+	   player := 3-player
+	 }
+  };
+  print_int(winner)
+}

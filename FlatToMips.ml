@@ -43,7 +43,7 @@ and translate_expression (e: FlatAST.expression) recs args locals = match e with
 									| Not ->	translate_value v recs args locals @@ not_ t0 t0 @@ li t1 (-1))
   | BinaryOp(o,v1,v2) ->		let c1 = translate_value v1 recs args locals in
 								let c2 = translate_value v2 recs args locals in
-								let code = c1 @@ move s0 t0 @@ c2 @@ move t1 s0 in
+								let code = c1 @@ move s2 t0 @@ c2 @@ move t1 s2 in
 								(match o with
 									| Add -> code @@ add t0 t1 t0 @@ li t1 0
 									| Sub -> code @@ sub t0 t1 t0 @@ li t1 0
@@ -58,8 +58,8 @@ and translate_expression (e: FlatAST.expression) recs args locals = match e with
 									| Le -> code @@ sle t0 t1 t0 @@ neg t0 t0 @@ li t1 (-1)
 									| And -> code @@ and_ t0 t1 t0 @@ li t1 (-1)
 									| Or -> code @@ or_ t0 t1 t0 @@ li t1 (-1)
-									| LEq -> c1 @@ move a0 t0 @@ move a1 t1 @@ c2 @@ move a2 t0 @@ move a3 t1 @@ save_locals args locals @@ jal "logic_equality" @@ load_locals args locals @@ move t0 v0 @@ li t1 (-1))
-  | NewBlock(v,n) ->			li v0 9 @@ translate_value v recs args locals @@ li t1 8 @@ mul a0 t0 t1 @@ addi a0 a0 4 @@ syscall @@ addi t1 v0 4 @@ sll t0 t0 16 @@ addi t0 t0 n @@ sw t0 (-4) t1 @@ move t0 t1 @@ li t1 1
+									| LEq -> c1 @@ save_locals args locals @@ move a0 t0 @@ move a1 t1 @@ c2 @@ move a2 t0 @@ move a3 t1 @@ jal "logic_equality" @@ load_locals args locals @@ move t0 v0 @@ li t1 (-1))
+  | NewBlock(v,n) ->			li v0 9 @@ save_locals args locals @@ translate_value v recs args locals @@ li t1 8 @@ mul a0 t0 t1 @@ addi a0 a0 4 @@ syscall @@ addi t1 v0 4 @@ sll t0 t0 16 @@ addi t0 t0 n @@ sw t0 (-4) t1 @@ move t0 t1 @@ li t1 1 @@ load_locals args locals
   | LabelAddr(Lab(lab)) -> 		la t0 lab
   | FunCall(Id(i),vl) -> 		let vars_decl = List.fold_left (fun (code,cpt) value -> let next_code = translate_value value recs args locals @@ (match cpt with
 																											| 0 -> move a0 t0 @@ move a1 t1
@@ -89,17 +89,17 @@ and translate_location (l: FlatAST.location) recs args locals = match l with
 												   | 1 -> (nop,a2,a3)
 												   | _ -> let decalage = (max 0 (8*(n-2))) in (addi t0 fp decalage @@ addi t1 fp decalage,t0,t1))
 											with Global_var -> (la t0 s @@ addi t1 t0 4,t0,t1)))
-  | BlockAccess(v1,v2) -> (translate_value v2 recs args locals @@ lw t1 0 t0 @@ bltz t0 "atoi_error" @@ translate_value v1 recs args locals @@ lw t0 0 t0 @@ lw t0 (-4) t0 @@ srl t0 t0 16 @@ bge t1 t0 "atoi_error" @@ li t0 8 @@ mul t1 t1 t0 @@ translate_value v1 recs args locals @@ lw t0 0 t0 @@ add t0 t0 t1 @@ addi t1 t0 4,t0,t1)
+  | BlockAccess(v1,v2) -> (translate_value v2 recs args locals @@ bltz t0 "atoi_error" @@ sw t0 0 sp @@ addi sp sp 8 @@ translate_value v1 recs args locals @@ lw t0 (-4) t0 @@ srl t0 t0 16 @@ lw t1 (-8) sp @@ bge t1 t0 "atoi_error" @@ translate_value v1 recs args locals @@ subi sp sp 8 @@ lw t1 0 sp @@ li s3 8 @@ mul t1 t1 s3 @@ add t0 t0 t1 @@ addi t1 t0 4,t0,t1)
 							
 and translate_instruction (i : FlatAST.instruction) recs args locals = match i with
   | Nop -> 							nop
   | Sequence(i1,i2) -> 				let i1 = translate_instruction i1 recs args locals in 
 									let i2 = translate_instruction i2 recs args locals in
 									i1 @@ i2
-  | Set(l,v) ->						let code,r0,r1 = translate_location l recs args locals in if code = nop then translate_value v recs args locals @@ move r0 t0 @@ move r1 t1
-																											else translate_value v recs args locals @@ move s0 t0 @@ move s1 t1 @@ code @@ sw s0 0 r0 @@ sw s1 0 r1
-  | FlatSet(l,e) ->					let code,r0,r1 = translate_location l recs args locals in if code = nop then translate_expression e recs args locals @@ move r0 t0 @@ move r1 t1
-																											else translate_expression e recs args locals @@ move s0 t0 @@ move s1 t1 @@ code @@ sw s0 0 r0 @@ sw s1 0 r1
+  | Set(l,v) ->						let code,r0,r1 = translate_location l recs args locals in if code = nop then comment "start" @@ translate_value v recs args locals @@ move r0 t0 @@ move r1 t1 @@ comment "end"
+																											else comment "start" @@ code @@ move s0 r0 @@ move s1 r1 @@ translate_value v recs args locals @@ sw t0 0 s0 @@ sw t1 0 s1 @@ comment "end"
+  | FlatSet(l,e) ->					let code,r0,r1 = translate_location l recs args locals in if code = nop then comment "startf" @@ translate_expression e recs args locals @@ move r0 t0 @@ move r1 t1 @@ comment "endf"
+																											else comment "startf" @@ code @@ move s0 r0 @@ move s1 r1 @@ translate_expression e recs args locals @@ sw t0 0 s0 @@ sw t1 0 s1 @@ comment "endf"
   | Label(Lab(lab)) ->				label lab
   | Goto(Lab(lab)) ->				b lab
   | ConditionalGoto(Lab(lab),v) ->	translate_value v recs args locals @@ bltz t0 lab
@@ -122,7 +122,7 @@ and translate_instruction (i : FlatAST.instruction) recs args locals = match i w
 									let add = (let decalage = (max 0 (8*((List.length vl)-(max 0 (4-n))))) in if decalage > 0 then addi sp sp decalage else nop) in
 									let i = translate_instruction i recs args locals2 in
 									let n = (List.length locals2) in
-									let sub = (let decalage = (max 0 (8*(min (List.length vl) (4-n)))) in if decalage > 0 then subi sp sp decalage else nop) in
+									let sub = (let decalage = (max 0 (8*(min (List.length vl) (n-4)))) in if decalage > 0 then subi sp sp decalage else nop) in
 									add @@ i @@ sub
 
 let translate_program program =
@@ -184,15 +184,15 @@ let translate_program program =
 	
 	@@ comment "power"
     @@ label "power_int_int"
-    @@ move s1 a0
-    @@ move s0 a2
+    @@ move s5 a0
+    @@ move s4 a2
     @@ li t0 1
     @@ b "power_loop_guard"
     @@ label "power_loop_code"
-    @@ mul t0 t0 s1
-    @@ subi s0 s0 1
+    @@ mul t0 t0 s5
+    @@ subi s4 s4 1
     @@ label "power_loop_guard"
-    @@ bgtz s0 "power_loop_code"
+    @@ bgtz s4 "power_loop_code"
     @@ move v0 t0
 	@@ li v1 0
     @@ jr ra
@@ -205,9 +205,16 @@ let translate_program program =
 	@@ li v1 0
 	@@ jr ra
 	
+	@@ comment "scan_int"
+	@@ label "scan_int"
+	@@ li v0 5
+	@@ syscall
+	@@ li v1 0
+	@@ jr ra
+	
 	and logic_equality =
 	   label "logic_equality"
-	@@ beq a1 a3 "le_same"	(* teste si les valeurs sont de même type *)
+(*	@@ beq a1 a3 "le_same"	(* teste si les valeurs sont de même type *)
 	@@ li v0 0
 	@@ jr ra
     @@ label "le_same"
@@ -265,12 +272,12 @@ let translate_program program =
 	@@ addi t1 t1 1
 	@@ addi t2 t2 8
 	@@ bne t0 t1 "le_block_same_loop"	(* si on n'a pas fini d'itérer, on continue *)
-	@@ li v0 (-1)	(* sinon on renvoie vrai *)
+	@@ li v0 (-1)	(* sinon on renvoie vrai *) *)
 	@@ jr ra
 	
 	and dynamic_alloc =
 	   comment "malloc"
-    @@ label "malloc_int"
+(*    @@ label "malloc_int"
 	@@ sw ra 0 sp
 	@@ addi sp sp 4
 	@@ li t0 8 
@@ -432,10 +439,9 @@ let translate_program program =
 	@@ sw v0 0 t0
 	@@ subi sp sp 4
 	@@ lw ra 0 sp
-	@@ jr ra
+	@@ jr ra *)
 	
 	in
-	(* edit pour stocker dans t2-t9 avec un compteur *)
 	let fun_code = Symb_Tbl.fold (fun id f code -> let args = f.signature.formals in let recs = f.recursive in let locals = Symb_Tbl.fold (fun key value l -> (key,value)::l) f.locals [] in
 									let vars_decl = List.fold_left (fun (code,cpt) (key,value) -> let i = (match value with
 																										  | TypInt -> 0

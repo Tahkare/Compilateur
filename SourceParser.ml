@@ -3341,7 +3341,7 @@ and _menhir_reduce77 : _menhir_env -> (('ttv_tail * _menhir_state * 'tv_location
 			| _ , _, _ -> let pos = _startpos in failwith (Printf.sprintf "Syntax error at %d, %d : not the same number of arguments on each side of the assignment" pos.pos_lnum (pos.pos_cnum - pos.pos_bol))
 
 	    in match a with s,e -> (match s with
-				| [] -> (make_assignment l ass false,!tmp_vars)
+				| [] -> let a = make_assignment l ass false in (a,!tmp_vars)
 				| hd::tl -> match (iter (l::s) (e@[ass]) (make_instr Nop,make_instr Nop)) with m,g -> (Sequence(m,g),!tmp_vars))
 	   )
 # 3348 "SourceParser.ml"

@@ -83,6 +83,7 @@ Les 4 premières variables locales d'une fonction et leurs types sont stockés d
 
 J'ai également ajouté en plus la possibilité de définir des fonctions anonymes dans des expressions avec la syntaxe :
 (fun *type* (*params*) -> *instr*)(*args*)
+J'ai aussi ajouté la fonction prédéfinie scan_int() qui lit un entier entré par l'utilisateur et le renvoie pour avoir des programmes "interactifs"
 
 
 J'ai tout réalisé par moi-même.

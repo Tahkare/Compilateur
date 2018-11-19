@@ -47,9 +47,9 @@ and translate_location depth l =
 let rec translate_instruction terminal = function
   | Gto.Sequence(i1,i2) ->			translate_instruction false i1 ++
 									translate_instruction terminal i2
-  | Gto.Set(l,e) ->					(match (translate_location 0 l) with code,l ->
-														let e = translate_expression false 1 e in
-														code ++ e ++ Flat.Set(l,tmpl 1))												
+  | Gto.Set(l,e) ->					(match (translate_location 1 l) with code,l ->
+														let e = translate_expression false 0 e in
+														e ++ code ++ Flat.Set(l,tmpl 0))												
   | Gto.Label(l) ->					Flat.Label(l)
   | Gto.Goto(l) ->					Flat.Goto(l)
   | Gto.ConditionalGoto(l,e) ->     let e = translate_expression false 0 e in
