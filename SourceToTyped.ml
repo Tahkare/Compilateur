@@ -204,6 +204,5 @@ let type_program p =
   let functions = Symb_Tbl.fold (fun id f tbl -> calls_fun := false; 
 												 let locals = Symb_Tbl.fold (fun var typ locals_list -> (var,typ)::locals_list ) Src.(f.locals) [] in
 												 let code = (try type_instruction (false,Src.Identifier(Id("")),"") id locals Src.(f.code) with (Type_error(t,e,p)) -> failwith ("Expected type "^(tts e)^" but got type "^(tts t)^" at pos "^(string_of_int (Pervasives.fst p))^","^(string_of_int (Pervasives.snd p)))) in
-												 let t = expand_fun_name id in
-												 Symb_Tbl.add t Typed.({signature = Src.(f.signature); code = code; locals = Src.(f.locals); recursive = !calls_fun; }) tbl) Src.(p.functions) (Symb_Tbl.empty) in
+												 Symb_Tbl.add id Typed.({signature = Src.(f.signature); code = code; locals = Src.(f.locals); recursive = !calls_fun; }) tbl) Src.(p.functions) (Symb_Tbl.empty) in
   Typed.({ globals; structs; union; functions; })

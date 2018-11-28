@@ -276,7 +276,7 @@ let translate_program program =
 	@@ addi t1 t1 1
 	@@ addi t2 t2 8
 	@@ bne t0 t1 "le_block_same_loop"	(* si on n'a pas fini d'itérer, on continue *)
-	@@ li v0 (-1)	(* sinon on renvoie vrai *) *)
+	@@ li v0 (-1)	(* sinon on renvoie vrai *)
 	@@ jr ra
 	
 	and dynamic_alloc =

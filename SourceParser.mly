@@ -163,7 +163,14 @@ ident_list:
 	
 fun_decls:
 | /*empty*/ { Symb_Tbl.empty }
-| t=type_all; i=IDENT; lp; p=parameters; rp; b=block; f=fun_decls { match b with j,v -> let g = {signature = { return = t; formals = p; }; code = j; locals = v; } in   Symb_Tbl.add i g f } 
+| t=type_all; i=IDENT; lp; p=parameters; rp; b=block; f=fun_decls {  let name = List.fold_left (fun str (x,t) -> (let tts = function
+																												| TypInt -> "int"
+																												| TypBool -> "bool"
+																												| TypArray t -> "array_of_"^(tts t)
+																												| TypStruct s -> "struct_"^s
+																												| TypVoid -> "void"
+																												| TypAny -> "any") in (str^"_"^(tts t))) i p in
+																	 match b with j,v -> let g = {signature = { return = t; formals = p; }; code = j; locals = v; } in   Symb_Tbl.add name g f } 
 | i=IDENT; lp; p=parameters; rp; b=block; f=fun_decls { match b with j,v -> let g = {signature = { return = TypVoid; formals = p; }; code = j; locals = v; } in  Symb_Tbl.add i g f }
 ;
 
