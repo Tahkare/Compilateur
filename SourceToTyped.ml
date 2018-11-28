@@ -25,11 +25,9 @@ let rec tts = function
 	| TypAny -> "any"	
 
 (* Etend le nom d'une fonction pour gérer la surcharge *)	
-let rec expand_fun_name id =
-	let rec expand_aux id l = match l with
+let rec expand_fun_name id args = match args with
 	  | [] -> id
-	  | (_,t)::tl -> expand_aux (id^"_"^(tts t)) tl
-	in expand_aux id (Symb_Tbl.find id (!context.function_signatures)).formals
+	  | hd::tl -> expand_fun_name (id^"_"^(tts Typed.(hd.t))) tl
 
 (* Vérification d'un type par rapport à une valeur attendue *)
 let rec assert_type expected tested pos =
@@ -96,8 +94,10 @@ let rec type_expression switch name locals e =
   | Src.NewRecord(s) -> 		let (i,_) = Symb_Tbl.find s !context.struct_types in 
 								Typed.({expr = Typed.NewRecord(s); t = TypStruct(i)})
   | Src.FunCall(Id(i),el) -> 	calls_fun := true;
-								let funtype = (Symb_Tbl.find i (!context.function_signatures)).return in
-								Typed.({expr = Typed.FunCall(Id(expand_fun_name i),List.map (fun x -> type_expression switch name locals x) el); t = funtype })
+								let args = List.map (fun x -> type_expression switch name locals x) el in
+								let name = expand_fun_name i args in
+								let funtype = (Symb_Tbl.find name (!context.function_signatures)).return in
+								Typed.({expr = Typed.FunCall(Id(name),args); t = funtype })
   
 (* Typage d'une location *) 
 and type_location immutable switch name locals l = match l with
@@ -178,7 +178,9 @@ let rec type_instruction switch name locals (i : Src.localised_instruction) =
 								| _ -> failwith "Expected a struct type")
   | Src.Return(e) -> 			Typed.Return(type_expression switch name locals e)
   | Src.ProcCall(Id(i),el) -> 	calls_fun := true;
-								Typed.ProcCall(Id(expand_fun_name i),List.map (fun x -> type_expression switch name locals x) el)
+								let args = List.map (fun x -> type_expression switch name locals x) el in
+								let name = expand_fun_name i args in 
+								Typed.ProcCall(Id(name),args)
   | Src.TypeCheck(e1,e2) -> 	let t1 = type_expression switch name locals e1 in
 								let t2 = type_expression switch name locals e2 in
 								assert_type Typed.(t1.t) Typed.(t2.t) Src.(i.i_pos);
@@ -190,11 +192,11 @@ let type_program p =
   context := {identifier_types = Src.(p.globals);
 			  struct_types = Src.(p.structs);
 			  union_lists = Src.(p.union);
-			  function_signatures = (let f = Symb_Tbl.add "print_int" {return=TypInt; formals=["x", TypInt]} Symb_Tbl.empty in
-									 let f = Symb_Tbl.add "power" {return=TypInt; formals=["x",TypInt; "n",TypInt]} f in
-									 let f = Symb_Tbl.add "print" {return=TypVoid; formals=["x", TypInt]} f in
-									 let f = Symb_Tbl.add "free" {return=TypVoid; formals=["x", TypArray(TypAny)]} f in
-									 let f = Symb_Tbl.add "malloc" {return=TypArray(TypAny); formals=["x", TypInt]} f in
+			  function_signatures = (let f = Symb_Tbl.add "print_int_int" {return=TypInt; formals=["x", TypInt]} Symb_Tbl.empty in
+									 let f = Symb_Tbl.add "power_int_int" {return=TypInt; formals=["x",TypInt; "n",TypInt]} f in
+									 let f = Symb_Tbl.add "print_int" {return=TypVoid; formals=["x", TypInt]} f in
+									 let f = Symb_Tbl.add "free_array_of_any" {return=TypVoid; formals=["x", TypArray(TypAny)]} f in
+									 let f = Symb_Tbl.add "malloc_int" {return=TypArray(TypAny); formals=["x", TypInt]} f in
 									 let f = Symb_Tbl.add "scan_int" {return=TypInt; formals=[]} f in
 									 (Symb_Tbl.fold (fun id f tbl -> Symb_Tbl.add id Src.(f.signature) tbl) Src.(p.functions) f))
 			 };

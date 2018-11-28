@@ -96,10 +96,10 @@ and translate_instruction (i : FlatAST.instruction) recs args locals = match i w
   | Sequence(i1,i2) -> 				let i1 = translate_instruction i1 recs args locals in 
 									let i2 = translate_instruction i2 recs args locals in
 									i1 @@ i2
-  | Set(l,v) ->						let code,r0,r1 = translate_location l recs args locals in if code = nop then comment "start" @@ translate_value v recs args locals @@ move r0 t0 @@ move r1 t1 @@ comment "end"
-																											else comment "start" @@ code @@ move s0 r0 @@ move s1 r1 @@ translate_value v recs args locals @@ sw t0 0 s0 @@ sw t1 0 s1 @@ comment "end"
-  | FlatSet(l,e) ->					let code,r0,r1 = translate_location l recs args locals in if code = nop then comment "startf" @@ translate_expression e recs args locals @@ move r0 t0 @@ move r1 t1 @@ comment "endf"
-																											else comment "startf" @@ code @@ move s0 r0 @@ move s1 r1 @@ translate_expression e recs args locals @@ sw t0 0 s0 @@ sw t1 0 s1 @@ comment "endf"
+  | Set(l,v) ->						let code,r0,r1 = translate_location l recs args locals in if code = nop then translate_value v recs args locals @@ move r0 t0 @@ move r1 t1
+																											else code @@ move s0 r0 @@ move s1 r1 @@ translate_value v recs args locals @@ sw t0 0 s0 @@ sw t1 0 s1
+  | FlatSet(l,e) ->					let code,r0,r1 = translate_location l recs args locals in if code = nop then translate_expression e recs args locals @@ move r0 t0 @@ move r1 t1
+																											else code @@ move s0 r0 @@ move s1 r1 @@ translate_expression e recs args locals @@ sw t0 0 s0 @@ sw t1 0 s1
   | Label(Lab(lab)) ->				label lab
   | Goto(Lab(lab)) ->				b lab
   | ConditionalGoto(Lab(lab),v) ->	translate_value v recs args locals @@ bltz t0 lab

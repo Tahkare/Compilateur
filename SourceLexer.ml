@@ -1,4 +1,4 @@
-# 1 ".\SourceLexer.mll"
+# 1 "SourceLexer.mll"
  
 
   (* Contexte *)
@@ -27,7 +27,7 @@
       with Not_found -> IDENT(s)
         
 
-# 31 ".\SourceLexer.ml"
+# 31 "SourceLexer.ml"
 let __ocaml_lex_tables = {
   Lexing.lex_base = 
    "\000\000\219\255\220\255\223\255\224\255\002\000\227\255\228\255\
@@ -173,189 +173,189 @@ let rec token lexbuf =
 and __ocaml_lex_token_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 38 ".\SourceLexer.mll"
+# 38 "SourceLexer.mll"
       ( chars := !chars+1; token lexbuf )
-# 179 ".\SourceLexer.ml"
+# 179 "SourceLexer.ml"
 
   | 1 ->
-# 40 ".\SourceLexer.mll"
+# 40 "SourceLexer.mll"
    ( chars := !chars+4; token lexbuf )
-# 184 ".\SourceLexer.ml"
+# 184 "SourceLexer.ml"
 
   | 2 ->
-# 42 ".\SourceLexer.mll"
+# 42 "SourceLexer.mll"
       ( lines := !lines+1; chars := 1; new_line lexbuf; token lexbuf )
-# 189 ".\SourceLexer.ml"
+# 189 "SourceLexer.ml"
 
   | 3 ->
-# 44 ".\SourceLexer.mll"
+# 44 "SourceLexer.mll"
    ( chars := !chars+1; token lexbuf )
-# 194 ".\SourceLexer.ml"
+# 194 "SourceLexer.ml"
 
   | 4 ->
-# 48 ".\SourceLexer.mll"
+# 48 "SourceLexer.mll"
       ( chars := !chars+(lexeme_end lexbuf)-(lexeme_start lexbuf); id_or_keyword (lexeme lexbuf) )
-# 199 ".\SourceLexer.ml"
+# 199 "SourceLexer.ml"
 
   | 5 ->
-# 51 ".\SourceLexer.mll"
+# 51 "SourceLexer.mll"
       ( chars := !chars+1; BEGIN )
-# 204 ".\SourceLexer.ml"
+# 204 "SourceLexer.ml"
 
   | 6 ->
-# 53 ".\SourceLexer.mll"
+# 53 "SourceLexer.mll"
       ( chars := !chars+1; END )
-# 209 ".\SourceLexer.ml"
+# 209 "SourceLexer.ml"
 
   | 7 ->
-# 56 ".\SourceLexer.mll"
+# 56 "SourceLexer.mll"
       ( chars := !chars+1; LC )
-# 214 ".\SourceLexer.ml"
+# 214 "SourceLexer.ml"
 
   | 8 ->
-# 58 ".\SourceLexer.mll"
+# 58 "SourceLexer.mll"
       ( chars := !chars+1; RC )
-# 219 ".\SourceLexer.ml"
+# 219 "SourceLexer.ml"
 
   | 9 ->
-# 61 ".\SourceLexer.mll"
+# 61 "SourceLexer.mll"
    ( chars := !chars+(lexeme_end lexbuf)-(lexeme_start lexbuf); CONST_INT (int_of_string(lexeme lexbuf)) )
-# 224 ".\SourceLexer.ml"
+# 224 "SourceLexer.ml"
 
   | 10 ->
-# 64 ".\SourceLexer.mll"
+# 64 "SourceLexer.mll"
       ( chars := !chars+2; ARROW )
-# 229 ".\SourceLexer.ml"
+# 229 "SourceLexer.ml"
 
   | 11 ->
-# 66 ".\SourceLexer.mll"
+# 66 "SourceLexer.mll"
    ( chars := !chars+1; PLUS )
-# 234 ".\SourceLexer.ml"
+# 234 "SourceLexer.ml"
 
   | 12 ->
-# 68 ".\SourceLexer.mll"
+# 68 "SourceLexer.mll"
    ( chars := !chars+1; MINUS )
-# 239 ".\SourceLexer.ml"
+# 239 "SourceLexer.ml"
 
   | 13 ->
-# 70 ".\SourceLexer.mll"
+# 70 "SourceLexer.mll"
    ( chars := !chars+1; STAR )
-# 244 ".\SourceLexer.ml"
+# 244 "SourceLexer.ml"
 
   | 14 ->
-# 72 ".\SourceLexer.mll"
+# 72 "SourceLexer.mll"
    ( chars := !chars+1; DIV )
-# 249 ".\SourceLexer.ml"
+# 249 "SourceLexer.ml"
 
   | 15 ->
-# 74 ".\SourceLexer.mll"
+# 74 "SourceLexer.mll"
    ( chars := !chars+1; MOD )
-# 254 ".\SourceLexer.ml"
+# 254 "SourceLexer.ml"
 
   | 16 ->
-# 76 ".\SourceLexer.mll"
+# 76 "SourceLexer.mll"
    ( chars := !chars+2; EQUAL )
-# 259 ".\SourceLexer.ml"
+# 259 "SourceLexer.ml"
 
   | 17 ->
-# 78 ".\SourceLexer.mll"
+# 78 "SourceLexer.mll"
    ( chars := !chars+1; SET_INIT )
-# 264 ".\SourceLexer.ml"
+# 264 "SourceLexer.ml"
 
   | 18 ->
-# 80 ".\SourceLexer.mll"
+# 80 "SourceLexer.mll"
    ( chars := !chars+2; NEQ )
-# 269 ".\SourceLexer.ml"
+# 269 "SourceLexer.ml"
 
   | 19 ->
-# 82 ".\SourceLexer.mll"
+# 82 "SourceLexer.mll"
    ( chars := !chars+2; LE )
-# 274 ".\SourceLexer.ml"
+# 274 "SourceLexer.ml"
 
   | 20 ->
-# 84 ".\SourceLexer.mll"
+# 84 "SourceLexer.mll"
    ( chars := !chars+1; LT )
-# 279 ".\SourceLexer.ml"
+# 279 "SourceLexer.ml"
 
   | 21 ->
-# 86 ".\SourceLexer.mll"
+# 86 "SourceLexer.mll"
    ( chars := !chars+2; GE )
-# 284 ".\SourceLexer.ml"
+# 284 "SourceLexer.ml"
 
   | 22 ->
-# 88 ".\SourceLexer.mll"
+# 88 "SourceLexer.mll"
    ( chars := !chars+1; GT )
-# 289 ".\SourceLexer.ml"
+# 289 "SourceLexer.ml"
 
   | 23 ->
-# 90 ".\SourceLexer.mll"
+# 90 "SourceLexer.mll"
    ( chars := !chars+1; NOT )
-# 294 ".\SourceLexer.ml"
+# 294 "SourceLexer.ml"
 
   | 24 ->
-# 92 ".\SourceLexer.mll"
+# 92 "SourceLexer.mll"
    ( chars := !chars+2; AND )
-# 299 ".\SourceLexer.ml"
+# 299 "SourceLexer.ml"
 
   | 25 ->
-# 94 ".\SourceLexer.mll"
+# 94 "SourceLexer.mll"
    ( chars := !chars+2; OR )
-# 304 ".\SourceLexer.ml"
+# 304 "SourceLexer.ml"
 
   | 26 ->
-# 96 ".\SourceLexer.mll"
+# 96 "SourceLexer.mll"
    ( chars := !chars+1; DOT )
-# 309 ".\SourceLexer.ml"
+# 309 "SourceLexer.ml"
 
   | 27 ->
-# 99 ".\SourceLexer.mll"
+# 99 "SourceLexer.mll"
    ( chars := !chars+1; LP )
-# 314 ".\SourceLexer.ml"
+# 314 "SourceLexer.ml"
 
   | 28 ->
-# 101 ".\SourceLexer.mll"
+# 101 "SourceLexer.mll"
    ( chars := !chars+1; RP )
-# 319 ".\SourceLexer.ml"
+# 319 "SourceLexer.ml"
 
   | 29 ->
-# 104 ".\SourceLexer.mll"
+# 104 "SourceLexer.mll"
    ( chars := !chars+2; SET )
-# 324 ".\SourceLexer.ml"
+# 324 "SourceLexer.ml"
 
   | 30 ->
-# 107 ".\SourceLexer.mll"
+# 107 "SourceLexer.mll"
    ( chars := !chars+1; COLON )
-# 329 ".\SourceLexer.ml"
+# 329 "SourceLexer.ml"
 
   | 31 ->
-# 110 ".\SourceLexer.mll"
+# 110 "SourceLexer.mll"
    ( chars := !chars+1; SEMI )
-# 334 ".\SourceLexer.ml"
+# 334 "SourceLexer.ml"
 
   | 32 ->
-# 112 ".\SourceLexer.mll"
+# 112 "SourceLexer.mll"
    ( chars := !chars+1; COMMA )
-# 339 ".\SourceLexer.ml"
+# 339 "SourceLexer.ml"
 
   | 33 ->
-# 115 ".\SourceLexer.mll"
+# 115 "SourceLexer.mll"
    ( chars := !chars+2; comment false lexbuf )
-# 344 ".\SourceLexer.ml"
+# 344 "SourceLexer.ml"
 
   | 34 ->
-# 117 ".\SourceLexer.mll"
+# 117 "SourceLexer.mll"
    ( chars := !chars+2; comment true lexbuf )
-# 349 ".\SourceLexer.ml"
+# 349 "SourceLexer.ml"
 
   | 35 ->
-# 120 ".\SourceLexer.mll"
+# 120 "SourceLexer.mll"
       ( EOF )
-# 354 ".\SourceLexer.ml"
+# 354 "SourceLexer.ml"
 
   | 36 ->
-# 123 ".\SourceLexer.mll"
+# 123 "SourceLexer.mll"
       ( failwith ("Unknown character : " ^ (lexeme lexbuf) ^ " on line " ^ string_of_int(!lines) ^ " at position " ^ string_of_int(!chars)) )
-# 359 ".\SourceLexer.ml"
+# 359 "SourceLexer.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_token_rec lexbuf __ocaml_lex_state
@@ -365,24 +365,24 @@ and comment multi lexbuf =
 and __ocaml_lex_comment_rec multi lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 127 ".\SourceLexer.mll"
+# 127 "SourceLexer.mll"
       ( lines := !lines+1; chars := 1; if multi then comment multi lexbuf else token lexbuf )
-# 371 ".\SourceLexer.ml"
+# 371 "SourceLexer.ml"
 
   | 1 ->
-# 129 ".\SourceLexer.mll"
+# 129 "SourceLexer.mll"
       ( chars := !chars+2; if multi then token lexbuf else comment multi lexbuf )
-# 376 ".\SourceLexer.ml"
+# 376 "SourceLexer.ml"
 
   | 2 ->
-# 131 ".\SourceLexer.mll"
+# 131 "SourceLexer.mll"
       ( if multi then failwith ("Reached end of file before comment was closed") else EOF )
-# 381 ".\SourceLexer.ml"
+# 381 "SourceLexer.ml"
 
   | 3 ->
-# 133 ".\SourceLexer.mll"
+# 133 "SourceLexer.mll"
    ( chars := !chars+1; comment multi lexbuf )
-# 386 ".\SourceLexer.ml"
+# 386 "SourceLexer.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_comment_rec multi lexbuf __ocaml_lex_state

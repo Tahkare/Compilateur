@@ -1,6 +1,22 @@
+print_three() {
+  print_int(3);
+}
+
+integer double(integer a) {
+  return(2*a);
+}
+
+integer double() {
+  return(double(0));
+}
+
 main {
-  var integer[] tab;
-  tab := new integer [1];
-  tab[0] := 3;
-  print_int(tab[0])
+  // On attend 3460 comme affichage
+  var integer[][] tab;
+  print_three();
+  arg := 4;
+  print_int(arg);
+  print_int(double(3));
+  print_int(double());
+  tab := new integer[2][2]
 }

@@ -84,7 +84,7 @@ prog:
 		in
 	    match main with instr,loc_vars -> match vars with glo_vars,inits -> let main = make_seq inits instr in
 	    let functions = Symb_Tbl.fold (fun key value tbl -> Symb_Tbl.add key value tbl) !anonf_pointer functions in
-		{ globals = Symb_Tbl.add "arg" TypInt glo_vars; structs = !struct_pointer; union = !union_pointer; functions = Symb_Tbl.add "main" {signature={return=TypInt;formals=["arg",TypInt]};code=main;locals=loc_vars;} functions } }
+		{ globals = Symb_Tbl.add "arg" TypInt glo_vars; structs = !struct_pointer; union = !union_pointer; functions = Symb_Tbl.add "main_int" {signature={return=TypInt;formals=["arg",TypInt]};code=main;locals=loc_vars;} functions } }
 ;
 
 decls:
@@ -163,15 +163,24 @@ ident_list:
 	
 fun_decls:
 | /*empty*/ { Symb_Tbl.empty }
-| t=type_all; i=IDENT; lp; p=parameters; rp; b=block; f=fun_decls {  let name = List.fold_left (fun str (x,t) -> (let tts = function
-																												| TypInt -> "int"
-																												| TypBool -> "bool"
-																												| TypArray t -> "array_of_"^(tts t)
-																												| TypStruct s -> "struct_"^s
-																												| TypVoid -> "void"
-																												| TypAny -> "any") in (str^"_"^(tts t))) i p in
-																	 match b with j,v -> let g = {signature = { return = t; formals = p; }; code = j; locals = v; } in   Symb_Tbl.add name g f } 
-| i=IDENT; lp; p=parameters; rp; b=block; f=fun_decls { match b with j,v -> let g = {signature = { return = TypVoid; formals = p; }; code = j; locals = v; } in  Symb_Tbl.add i g f }
+| t=type_all; i=IDENT; lp; p=parameters; rp; b=block; f=fun_decls {  let name = (List.fold_left (fun str (x,t) -> let rec tts = function
+																													| TypInt -> "int"
+																													| TypBool -> "bool"
+																													| TypArray t -> "array_of_"^(tts t)
+																													| TypStruct s -> "struct_"^s
+																													| TypVoid -> "void"
+																													| TypAny -> "any" 
+																													in (str^("_"^(tts t))) ) i p) in
+																	 match b with j,v -> let g = {signature = { return = t; formals = p; }; code = j; locals = v; } in Symb_Tbl.add name g f } 
+| i=IDENT; lp; p=parameters; rp; b=block; f=fun_decls { let name = (List.fold_left (fun str (x,t) -> let rec tts = function
+																													| TypInt -> "int"
+																													| TypBool -> "bool"
+																													| TypArray t -> "array_of_"^(tts t)
+																													| TypStruct s -> "struct_"^s
+																													| TypVoid -> "void"
+																													| TypAny -> "any" 
+																													in (str^("_"^(tts t))) ) i p) in
+														 match b with j,v -> let g = {signature = { return = TypVoid; formals = p; }; code = j; locals = v; } in  Symb_Tbl.add name g f }
 ;
 
 parameters:
@@ -500,7 +509,7 @@ assignment:
 ;
 
 array_decl:
-| NEW; t=type_all; a=array { Array(t,a) }
+| NEW; t=type_; a=array { Array(t,a) }
 ; 
 
 array:
