@@ -214,7 +214,7 @@ let translate_program program =
 	
 	and logic_equality =
 	   label "logic_equality"
-(*	@@ beq a1 a3 "le_same"	(* teste si les valeurs sont de même type *)
+	@@ beq a1 a3 "le_same"	(* teste si les valeurs sont de même type *)
 	@@ li v0 0
 	@@ jr ra
     @@ label "le_same"
@@ -257,9 +257,13 @@ let translate_program program =
 	@@ add a2 a2 t2
 	@@ lw a3 4 a2
 	@@ lw a2 0 a2
-	@@ save_to_stack_fun
+	@@ sw t1 0 sp
+	@@ sw t2 4 sp
+	@@ addi sp sp 8
 	@@ jal "logic_equality"
-	@@ get_from_stack
+	@@ subi sp sp 8
+	@@ lw t1 0 sp
+	@@ lw t2 4 sp
 	@@ bnez v0 "le_bsl_end"			(* si l'appel renvoie vrai, on passe au test de boucle sinon on renvoie faux *)
 	@@ li v0 0
 	@@ lw ra (-12) sp

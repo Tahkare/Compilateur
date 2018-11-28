@@ -15,7 +15,6 @@
 				
   let union_pointer = ref Symb_Tbl.empty
   let struct_pointer = ref Symb_Tbl.empty
-  let initializations = ref []
   let anonf_pointer = ref Symb_Tbl.empty
   
 %}
@@ -83,15 +82,15 @@ prog:
 						let instr = mk_instr instr Symb_Tbl.empty l c in
 						make_seq tl instr)
 		in
-	    match main with instr,loc_vars -> let main = make_seq !initializations instr in
+	    match main with instr,loc_vars -> match vars with glo_vars,inits -> let main = make_seq inits instr in
 	    let functions = Symb_Tbl.fold (fun key value tbl -> Symb_Tbl.add key value tbl) !anonf_pointer functions in
-		{ globals = Symb_Tbl.add "arg" TypInt vars; structs = !struct_pointer; union = !union_pointer; functions = Symb_Tbl.add "main" {signature={return=TypInt;formals=["arg",TypInt]};code=main;locals=loc_vars;} functions } }
+		{ globals = Symb_Tbl.add "arg" TypInt glo_vars; structs = !struct_pointer; union = !union_pointer; functions = Symb_Tbl.add "main" {signature={return=TypInt;formals=["arg",TypInt]};code=main;locals=loc_vars;} functions } }
 ;
 
 decls:
 | v=var_decls { v }	
 | struct_decls; vars=decls { vars }
-| v=var_decls; vars=decls { Symb_Tbl.fold(fun key value tbl -> Symb_Tbl.add key value tbl) v vars }
+| v=var_decls; vars=decls { match v with vlist,ilist -> match vars with vars_declared,init_declared -> (Symb_Tbl.fold(fun key value tbl -> Symb_Tbl.add key value tbl) vlist vars_declared,(ilist@init_declared)) }
 
 /** --------------------------
 	DECLARATION DES STRUCTURES
@@ -122,11 +121,14 @@ field_decl:
 /* Séquence de déclaration de variables 
    On va remplir une table avec le types des variables et renvoyer une liste avec les variables à initialiser et les valeurs associées */
 var_decls:
-| /*empty*/ { Symb_Tbl.empty }
-| VAR; t=type_; i=ident_init_list; SEMI; v=var_decls { match i with vars,init -> 
-			initializations := (init@(!initializations));
-			List.fold_left (fun tbl x -> Symb_Tbl.add x t tbl) v vars  }
-| VAR; t=type_array; i=ident_list; SEMI; v=var_decls { List.fold_left (fun tbl x -> Symb_Tbl.add x t tbl) v i }
+| /*empty*/ { (Symb_Tbl.empty,[]) }
+| VAR; t=type_; i=ident_init_list; SEMI; v=var_decls { match i with vars,init -> match v with vlist,inits ->
+			let inits = (init@inits) in
+			let vars = List.fold_left (fun tbl x -> Symb_Tbl.add x t tbl) vlist vars in
+			(vars,inits) }
+| VAR; t=type_array; i=ident_list; SEMI; v=var_decls { match v with vlist,inits -> 
+													   let vars = List.fold_left (fun tbl x -> Symb_Tbl.add x t tbl) vlist i in 
+													   (vars,inits) }
 | error { let pos = $startpos in
           let message = Printf.sprintf "Syntax error at %d, %d : variables not declared correctly" pos.pos_lnum (pos.pos_cnum - pos.pos_bol)
           in failwith message }
@@ -167,12 +169,12 @@ fun_decls:
 
 parameters:
 | /*empty*/ { [] }
-| t=type_all; i=IDENT; p=param_list { (i,t)::p }
+| p=params_aux { p }
 ;
 
-param_list:
-| /*empty*/ { [] }
-| comma; p=parameters { p }
+params_aux:
+| t=type_all; i=IDENT { [(i,t)] }
+| t=type_all; i=IDENT; comma; p=params_aux { (i,t)::p }
 ;
 
 /** -------------------
@@ -186,7 +188,18 @@ main:
 
 /* Un bloc est une instruction ou séquence d'instructions entre accolades. */
 block:
-| begin_; v=var_decls; i=localised_instruction; end_ { i,v }
+| begin_; v=var_decls; i=localised_instruction; end_ { let rec make_seq init loc_instr =
+														(match init with
+														[] -> loc_instr
+														| (id,e)::tl -> let instr = Set(Identifier(Id(id)),e) in
+																	let l = $startpos.pos_lnum in
+																	let c = $startpos.pos_cnum - $startpos.pos_bol in
+																	let instr = mk_instr instr Symb_Tbl.empty l c in
+																	let instr = Sequence(instr,loc_instr) in
+																	let instr = mk_instr instr Symb_Tbl.empty l c in
+																	make_seq tl instr)
+														in match v with vars,inits -> (make_seq inits i,vars)
+													 }
 ;
 
 /* Instruction localisée : on mémorise les numéros de ligne et de colonne du début de l'instruction.
@@ -357,10 +370,18 @@ instruction:
 | CONTINUE { Continue,Symb_Tbl.empty }
 | SWITCH; lp; l=location; rp; begin_; c=case_list; end_ { counter := !counter + 1; let s = "_tmp"^(string_of_int !counter) in (Switch(s,l,c),Symb_Tbl.singleton s TypAny) }
 | RETURN; lp; e=localised_expression; rp { Return(e),Symb_Tbl.empty }
-| BEGIN; v=var_decls; i=localised_instruction; end_ { let l = $startpos.pos_lnum in
-												let c = $startpos.pos_cnum - $startpos.pos_bol in
-												let n = mk_instr Nop Symb_Tbl.empty l c in
-												(Sequence(i,n),v) }
+| BEGIN; v=var_decls; i=localised_instruction; end_ { 	let l = $startpos.pos_lnum in
+														let c = $startpos.pos_cnum - $startpos.pos_bol in
+														let n = mk_instr Nop Symb_Tbl.empty l c in
+														let rec make_seq init loc_instr =
+															(match init with
+															[] -> loc_instr
+															| (id,e)::tl -> let instr = Set(Identifier(Id(id)),e) in
+																		let instr = mk_instr instr Symb_Tbl.empty l c in
+																		let instr = Sequence(instr,loc_instr) in
+																		let instr = mk_instr instr Symb_Tbl.empty l c in
+																		make_seq tl instr)
+														in match v with vars,init -> (Sequence((make_seq init i),n),vars) }
 | i=IDENT; LP; a=arguments; rp { ProcCall(Id(i),a),Symb_Tbl.empty }
 | i1=localised_instruction; SEMI; i2=localised_instruction { Sequence(i1,i2),Symb_Tbl.empty }
 | error { let pos = $startpos in
@@ -455,12 +476,12 @@ location:
 
 arguments:
 | /*empty */ { [] }
-| e=localised_expression; a=arg_list { e::a }
+| a=args_aux { a }
 ;
 
-arg_list:
-| /* empty */ { [] }
-| comma; a=arguments { a }
+args_aux:
+| e=localised_expression { [e] }
+| e=localised_expression; comma; a=args_aux { e::a }
 ;
 
 assignment:
@@ -472,7 +493,7 @@ assignment:
 ;
 
 array_decl:
-| NEW; t=type_; a=array { Array(t,a) }
+| NEW; t=type_all; a=array { Array(t,a) }
 ; 
 
 array:

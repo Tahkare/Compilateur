@@ -1,0 +1,6 @@
+main {
+  var integer[] tab;
+  tab := new integer [1];
+  tab[0] := 3;
+  print_int(tab[0])
+}
