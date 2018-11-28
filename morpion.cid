@@ -89,13 +89,15 @@ main {
   while(winner==0) {
      var integer coup;
 	 coup := scan_int();
-	 tab[2-(coup-1)/3][(coup-1)%3] := player;
-	 display(tab);
-	 if(check_win(tab)){
-	   winner := player
-	 } else {
-	   player := 3-player
-	 }
+     if (tab[2-(coup-1)/3][(coup-1)%3] == 0) {
+	   tab[2-(coup-1)/3][(coup-1)%3] := player;
+	   display(tab);
+	   if(check_win(tab)){
+	     winner := player
+	   } else {
+	     player := 3-player
+	   }
+    };
   };
   print_int(winner)
 }
