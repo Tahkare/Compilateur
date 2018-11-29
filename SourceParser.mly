@@ -56,6 +56,8 @@
 %right NOT
 %left SEMI
 %left DOT
+%nonassoc NEW
+%nonassoc LC
 
 %start prog
 %type <SourceLocalisedAST.program> prog
@@ -509,7 +511,7 @@ assignment:
 ;
 
 array_decl:
-| NEW; t=type_; a=array { Array(t,a) }
+| NEW; t=type_all ; a=array { Array(t,a) }
 ; 
 
 array:
