@@ -63,7 +63,6 @@ Les structures unions peuvent être créées initialisées (modélisé par une a
 Pour les switch, il faut une absence de redondance et soit que les cas soient exhaustifs, soit qu'il y ait un cas par défaut.
 L'étiquette est dans l'en-tête.
 La gestion des switch se fait avec la création d'une table de sauts quand on rencontre le switch.
-Il n'est pas possible de faire une assignation multiple avec un champ d'une structure union pour le moment.
 
 Partie 4.1:
 L'appel de procédure a été réalisé par la création d'une instruction procédure.
@@ -85,6 +84,7 @@ J'ai également ajouté en plus la possibilité de définir des fonctions anonym
 (fun *type* (*params*) -> *instr*)(*args*)
 J'ai aussi ajouté la fonction prédéfinie scan_int() qui lit un entier entré par l'utilisateur et le renvoie pour avoir des programmes "interactifs"
 
+Dans le dossier est inclus un petit jeu de morpion qui se joue en entrant des valeurs entre 1 et 9 au clavier.
 
 J'ai tout réalisé par moi-même.
 

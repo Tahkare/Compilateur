@@ -5,19 +5,22 @@ open Mips
 exception Global_var
 exception Local_var
 
-let save_locals args locals = (if List.length args > 0 then sw a0 0 sp @@ sw a1 4 sp @@ addi sp sp 8 else nop) @@
+let save_locals args locals = sw fp 0 sp @@ addi sp sp 8 @@
+				  (if List.length args > 0 then sw a0 0 sp @@ sw a1 4 sp @@ addi sp sp 8 else nop) @@
 				  (if List.length args > 1 then sw a2 0 sp @@ sw a3 4 sp @@ addi sp sp 8 else nop) @@
 				  (if List.length locals > 0 then sw t2 0 sp @@ sw t3 4 sp @@ addi sp sp 8 else nop) @@
 				  (if List.length locals > 1 then sw t4 0 sp @@ sw t5 4 sp @@ addi sp sp 8 else nop) @@
 				  (if List.length locals > 2 then sw t6 0 sp @@ sw t7 4 sp @@ addi sp sp 8 else nop) @@
 				  (if List.length locals > 3 then sw t8 0 sp @@ sw t9 4 sp @@ addi sp sp 8 else nop)
 				  
-let load_locals args locals = (if List.length locals > 3 then subi sp sp 8 @@ lw t8 0 sp @@ lw t9 4 sp else nop) @@
+let load_locals args locals = 
+                  (if List.length locals > 3 then subi sp sp 8 @@ lw t8 0 sp @@ lw t9 4 sp else nop) @@
 				  (if List.length locals > 2 then subi sp sp 8 @@ lw t6 0 sp @@ lw t7 4 sp else nop) @@
 				  (if List.length locals > 1 then subi sp sp 8 @@ lw t4 0 sp @@ lw t5 4 sp else nop) @@
 				  (if List.length locals > 0 then subi sp sp 8 @@ lw t2 0 sp @@ lw t3 4 sp else nop) @@
 				  (if List.length args > 1 then subi sp sp 8 @@ lw a2 0 sp @@ lw a3 4 sp else nop) @@
-				  (if List.length args > 0 then subi sp sp 8 @@ lw a0 0 sp @@ lw a1 4 sp else nop)
+				  (if List.length args > 0 then subi sp sp 8 @@ lw a0 0 sp @@ lw a1 4 sp else nop) @@
+				  subi sp sp 8 @@ lw fp 0 sp
 
 let rec remove n l = match n with
   | 0 -> l
@@ -96,14 +99,20 @@ and translate_instruction (i : FlatAST.instruction) recs args locals = match i w
   | Sequence(i1,i2) -> 				let i1 = translate_instruction i1 recs args locals in 
 									let i2 = translate_instruction i2 recs args locals in
 									i1 @@ i2
-  | Set(l,v) ->						let code,r0,r1 = translate_location l recs args locals in if code = nop then translate_value v recs args locals @@ move r0 t0 @@ move r1 t1
-																											else code @@ move s0 r0 @@ move s1 r1 @@ translate_value v recs args locals @@ sw t0 0 s0 @@ sw t1 0 s1
-  | FlatSet(l,e) ->					let code,r0,r1 = translate_location l recs args locals in if code = nop then translate_expression e recs args locals @@ move r0 t0 @@ move r1 t1
-																											else code @@ move s0 r0 @@ move s1 r1 @@ translate_expression e recs args locals @@ sw t0 0 s0 @@ sw t1 0 s1
+  | Set(l,v) ->						let code,r0,r1 = translate_location l recs args locals in if code = nop then comment "start" @@ translate_value v recs args locals @@ move r0 t0 @@ move r1 t1 @@ comment "end"
+																											else comment "start" @@ code @@ move s0 r0 @@ move s1 r1 @@ translate_value v recs args locals @@ sw t0 0 s0 @@ sw t1 0 s1  @@ comment "end"
+  | FlatSet(l,e) ->					let code,r0,r1 = translate_location l recs args locals in if code = nop then comment "start" @@ translate_expression e recs args locals @@ move r0 t0 @@ move r1 t1  @@ comment "end"
+																											else comment "start" @@ code @@ move s0 r0 @@ move s1 r1 @@ translate_expression e recs args locals @@ sw t0 0 s0 @@ sw t1 0 s1  @@ comment "end"
   | Label(Lab(lab)) ->				label lab
   | Goto(Lab(lab)) ->				b lab
   | ConditionalGoto(Lab(lab),v) ->	translate_value v recs args locals @@ bltz t0 lab
-  | Jump(s,l) ->					(* todo *) nop
+  | Jump(s,l) ->					let code,r0,r1 = translate_location (Identifier(Id(s))) recs args locals  in 
+									let code = (if code = nop then move s0 r0
+															  else code @@ lw s0 0 r0) in
+									let code2,r2,r3 = translate_location l recs args locals in
+									let code2 = (if code2 = nop then move t1 r2 @@ lw t1 (-4) t1 @@ sll t1 t1 16 @@ srl t1 t1 16 @@ subi t1 t1 1
+									                            else code2 @@ lw t1 0 t0 @@ lw t1 (-4) t1 @@ sll t1 t1 16 @@ srl t1 t1 16 @@ subi t1 t1 1) in
+									code @@ code2 @@ li t0 8 @@ mul t1 t1 t0 @@ add t0 s0 t1 @@ lw t0 0 t0 @@ jr t0
   | Return(v) ->					translate_value v recs args locals @@ move v0 t0 @@ move v1 t1 @@ (let decalage = (max 0 (8*((List.length locals)-4))) in if decalage > 0 then subi sp sp decalage else nop) @@ (if recs then subi sp sp 8 @@ lw ra 0 sp @@ lw fp 4 sp else nop) @@ jr ra
   | ProcCall(Id(i),vl) ->			let vars_decl = List.fold_left (fun (code,cpt) value -> let next_code = translate_value value recs args locals @@ (match cpt with
 																											| 0 -> move a0 t0 @@ move a1 t1
@@ -131,8 +140,7 @@ let translate_program program =
        beqz a0 "init_end"
     @@ lw a0 0 a1
     @@ jal "atoi"
-    @@ la t0 "arg"
-    @@ sw v0 0 t0
+    @@ move s7 v0
     @@ label "init_end"
 	@@ li v0 9
 	@@ li a0 500
@@ -145,6 +153,8 @@ let translate_program program =
 	@@ la t0 "__end"
 	@@ sw v0 0 t0
 	@@ move fp sp
+	@@ move a0 s7
+	@@ li a1 0
 	@@ jal "main_int"
 	@@ li v0 10
 	@@ syscall

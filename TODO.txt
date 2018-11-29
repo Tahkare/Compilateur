@@ -1,2 +1,1 @@
 Corriger dynamic allocation/logic equality
-Modifier la création des initialisations dans le parser pour qu'elles se fassent au bon endroit

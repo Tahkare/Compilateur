@@ -511,7 +511,7 @@ assignment:
 ;
 
 array_decl:
-| NEW; t=type_all ; a=array { Array(t,a) }
+| NEW; t=type_ ; a=array { Array(t,a) }
 ; 
 
 array:

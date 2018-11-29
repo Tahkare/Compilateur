@@ -112,12 +112,13 @@ let rec translate_loop (i : ImpAST.typed_instruction) c_label b_label =
 								in let next_label = new_label ()
 								in let end_label = new_label ()
 								in let after_branch_label = new_label ()
-								in
-								Gto.Set(Gto.Identifier(Id(s)),Gto.NewBlock(Gto.Literal(Int(List.length ilist+2)),0)) ++
-								translate_list 0 t next_label end_label after_branch_label ilist ++
-								Gto.Label(end_label) ++
-								Gto.Block(Gto.Jump(s,translate_location l),[(s,TypArray(TypAny))]) ++
-								Gto.Label(after_branch_label))		
+								in let instr =
+									Gto.Set(Gto.Identifier(Id(s)),Gto.NewBlock(Gto.Literal(Int(List.length ilist+2)),0)) ++
+									translate_list 0 t next_label end_label after_branch_label ilist ++
+									Gto.Label(end_label) ++
+									Gto.Jump(s,translate_location l) ++
+									Gto.Label(after_branch_label)
+								in Gto.Block(instr,[(s,TypArray(TypAny))]))		
   | Imp.Return(e) -> 			Gto.Return(translate_expression e)
   | Imp.ProcCall(i,el) -> 		Gto.ProcCall(i,List.map (fun x -> translate_expression x) el)
   ) in Gto.Block(instr,locals)
