@@ -3247,7 +3247,7 @@ and _menhir_reduce7 : _menhir_env -> ('ttv_tail * _menhir_state) * _menhir_state
     let _1 = () in
     let _v : 'tv_array_decl = 
 # 512 "SourceParser.mly"
-                        ( Array(t,a) )
+                         ( Array(t,a) )
 # 3252 "SourceParser.ml"
      in
     let (_menhir_env : _menhir_env) = _menhir_env in

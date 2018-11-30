@@ -56,8 +56,6 @@
 %right NOT
 %left SEMI
 %left DOT
-%nonassoc NEW
-%nonassoc LC
 
 %start prog
 %type <SourceLocalisedAST.program> prog
