@@ -1,4 +1,4 @@
-# 1 "Preprocessor.mll"
+# 1 ".\Preprocessor.mll"
  
 
   open Lexing
@@ -15,7 +15,7 @@
     Hashtbl.find macros_table name
   
 
-# 19 "Preprocessor.ml"
+# 19 ".\Preprocessor.ml"
 let __ocaml_lex_tables = {
   Lexing.lex_base = 
    "\000\000\252\255\253\255\000\000\000\000\000\000\000\000\000\000\
@@ -183,24 +183,24 @@ let rec preprocess lexbuf =
 and __ocaml_lex_preprocess_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 24 "Preprocessor.mll"
+# 24 ".\Preprocessor.mll"
     ( macro_name lexbuf )
-# 189 "Preprocessor.ml"
+# 189 ".\Preprocessor.ml"
 
   | 1 ->
-# 27 "Preprocessor.mll"
+# 27 ".\Preprocessor.mll"
  ( code_macro "" lexbuf )
-# 194 "Preprocessor.ml"
+# 194 ".\Preprocessor.ml"
 
   | 2 ->
-# 29 "Preprocessor.mll"
+# 29 ".\Preprocessor.mll"
  ( "" )
-# 199 "Preprocessor.ml"
+# 199 ".\Preprocessor.ml"
 
   | 3 ->
-# 31 "Preprocessor.mll"
+# 31 ".\Preprocessor.mll"
  ( code (lexeme lexbuf) lexbuf )
-# 204 "Preprocessor.ml"
+# 204 ".\Preprocessor.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_preprocess_rec lexbuf __ocaml_lex_state
@@ -210,14 +210,14 @@ and macro_name lexbuf =
 and __ocaml_lex_macro_name_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 36 "Preprocessor.mll"
+# 36 ".\Preprocessor.mll"
     ( macro_args (lexeme lexbuf) lexbuf )
-# 216 "Preprocessor.ml"
+# 216 ".\Preprocessor.ml"
 
   | 1 ->
-# 38 "Preprocessor.mll"
+# 38 ".\Preprocessor.mll"
  ( failwith ("Expected only alphabetic characters for a macro name but got : " ^ (lexeme lexbuf)) )
-# 221 "Preprocessor.ml"
+# 221 ".\Preprocessor.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_macro_name_rec lexbuf __ocaml_lex_state
@@ -227,20 +227,20 @@ and macro_args name lexbuf =
 and __ocaml_lex_macro_args_rec name lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 43 "Preprocessor.mll"
+# 43 ".\Preprocessor.mll"
     ( let nb_args = int_of_string(String.sub (lexeme lexbuf) 1 ((String.length (lexeme lexbuf))-3)) in
 		macro_text name nb_args lexbuf )
-# 234 "Preprocessor.ml"
+# 234 ".\Preprocessor.ml"
 
   | 1 ->
-# 46 "Preprocessor.mll"
+# 46 ".\Preprocessor.mll"
  ( macro_text name 0 lexbuf )
-# 239 "Preprocessor.ml"
+# 239 ".\Preprocessor.ml"
 
   | 2 ->
-# 48 "Preprocessor.mll"
+# 48 ".\Preprocessor.mll"
  ( failwith ("Expected number of args for the macro or a whitespace but got : " ^ (lexeme lexbuf)) )
-# 244 "Preprocessor.ml"
+# 244 ".\Preprocessor.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_macro_args_rec name lexbuf __ocaml_lex_state
@@ -250,14 +250,14 @@ and macro_text name args lexbuf =
 and __ocaml_lex_macro_text_rec name args lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 53 "Preprocessor.mll"
+# 53 ".\Preprocessor.mll"
  ( add_macro name args (sub (lexeme lexbuf) 0 ((String.length (lexeme lexbuf))-1)); preprocess lexbuf )
-# 256 "Preprocessor.ml"
+# 256 ".\Preprocessor.ml"
 
   | 1 ->
-# 55 "Preprocessor.mll"
+# 55 ".\Preprocessor.mll"
  ( failwith ("Expected the text corresponding to the macro but got : " ^ (lexeme lexbuf)) )
-# 261 "Preprocessor.ml"
+# 261 ".\Preprocessor.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_macro_text_rec name args lexbuf __ocaml_lex_state
@@ -267,19 +267,19 @@ and code text lexbuf =
 and __ocaml_lex_code_rec text lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 60 "Preprocessor.mll"
+# 60 ".\Preprocessor.mll"
  ( code_macro text lexbuf )
-# 273 "Preprocessor.ml"
+# 273 ".\Preprocessor.ml"
 
   | 1 ->
-# 62 "Preprocessor.mll"
+# 62 ".\Preprocessor.mll"
  ( code (text^(lexeme lexbuf)) lexbuf )
-# 278 "Preprocessor.ml"
+# 278 ".\Preprocessor.ml"
 
   | 2 ->
-# 64 "Preprocessor.mll"
+# 64 ".\Preprocessor.mll"
  ( text )
-# 283 "Preprocessor.ml"
+# 283 ".\Preprocessor.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_code_rec text lexbuf __ocaml_lex_state
@@ -289,17 +289,17 @@ and code_macro text lexbuf =
 and __ocaml_lex_code_macro_rec text lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 69 "Preprocessor.mll"
+# 69 ".\Preprocessor.mll"
     ( let (nb_args,text_macro) = get_macro (lexeme lexbuf) in
 		let (args,lexbuf,next_char) = code_args [] nb_args lexbuf in
 			let text_macro = (code_text "" args (from_string text_macro))  in
 			code (text^text_macro^(String.make 1 next_char)) lexbuf )
-# 298 "Preprocessor.ml"
+# 298 ".\Preprocessor.ml"
 
   | 1 ->
-# 74 "Preprocessor.mll"
+# 74 ".\Preprocessor.mll"
  ( failwith ("Expected the name of a macro but got : " ^ (lexeme lexbuf)) )
-# 303 "Preprocessor.ml"
+# 303 ".\Preprocessor.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_code_macro_rec text lexbuf __ocaml_lex_state
@@ -309,20 +309,20 @@ and code_args list nb_args lexbuf =
 and __ocaml_lex_code_args_rec list nb_args lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 79 "Preprocessor.mll"
+# 79 ".\Preprocessor.mll"
  ( let new_arg = sub (lexeme lexbuf) 1 ((String.length (lexeme lexbuf))-2) in
 		code_args (new_arg::list) (nb_args-1) lexbuf )
-# 316 "Preprocessor.ml"
+# 316 ".\Preprocessor.ml"
 
   | 1 ->
 let
-# 81 "Preprocessor.mll"
+# 81 ".\Preprocessor.mll"
          next_char
-# 322 "Preprocessor.ml"
+# 322 ".\Preprocessor.ml"
 = Lexing.sub_lexeme_char lexbuf lexbuf.Lexing.lex_start_pos in
-# 82 "Preprocessor.mll"
+# 82 ".\Preprocessor.mll"
  ( if nb_args == 0 then (List.rev list,lexbuf, next_char) else failwith "Wrong number of arguments" )
-# 326 "Preprocessor.ml"
+# 326 ".\Preprocessor.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_code_args_rec list nb_args lexbuf __ocaml_lex_state
@@ -332,21 +332,21 @@ and code_text text args lexbuf =
 and __ocaml_lex_code_text_rec text args lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 87 "Preprocessor.mll"
+# 87 ".\Preprocessor.mll"
     (let nb = int_of_string(sub (lexeme lexbuf) 1 ((String.length (lexeme lexbuf))-1)) in
 		let arg_text = (nth args (nb-1)) in 
 		code_text (text^arg_text) args lexbuf )
-# 340 "Preprocessor.ml"
+# 340 ".\Preprocessor.ml"
 
   | 1 ->
-# 91 "Preprocessor.mll"
+# 91 ".\Preprocessor.mll"
  ( code_text (text^(lexeme lexbuf)) args lexbuf )
-# 345 "Preprocessor.ml"
+# 345 ".\Preprocessor.ml"
 
   | 2 ->
-# 93 "Preprocessor.mll"
+# 93 ".\Preprocessor.mll"
  ( text )
-# 350 "Preprocessor.ml"
+# 350 ".\Preprocessor.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_code_text_rec text args lexbuf __ocaml_lex_state

@@ -33,7 +33,8 @@ let () =
   close_in c;
   let prog = SourceToTyped.type_program prog in
   let prog = TypedToImp.translate_program prog in
-  let prog = ImpToGoto.translate_program prog in 
+  let prog = ImpToGoto.translate_program prog in
+  let prog = IndexedGotoDeadCodeElim.dead_code_clear prog in
   let prog = GotoToFlat.translate_program prog in
   let asm = FlatToMips.translate_program prog in
   let output_file = (Filename.chop_suffix file ".cid") ^ ".asm" in

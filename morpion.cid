@@ -42,7 +42,7 @@ display_aux (integer a) {
 // Win condition check
 boolean check_win(integer[][] tab) {
 	var integer[] tmp;
-	if (check_line(tab[arg]) || check_line(tab[1]) || check_line(tab[2])) {
+	if (check_line(tab[0]) || check_line(tab[1]) || check_line(tab[2])) {
 	  return(true);
 	} else {
 	  tmp := new integer[3];
@@ -66,7 +66,7 @@ boolean check_win(integer[][] tab) {
 	  if (check_line(tmp)) {
 	    return(true)
 	  };
-	};
+	}; 
 	return(false)
 }
 

@@ -1,18 +1,30 @@
 open CommonAST
-module Gto = GotoAST
   
 type instruction = int * instruction_descr 
+
+and expression =
+  | Literal  of literal
+  | Location of location
+  | UnaryOp  of unaryOp  * expression
+  | BinaryOp of binaryOp * expression * expression
+  | NewBlock of expression * int
+  | LabelAddr of label
+  | FunCall  of identifier * expression list
+
+and location =
+  | Identifier  of identifier
+  | BlockAccess of expression * expression 
    
 and instruction_descr =
   | Sequence        of instruction * instruction
-  | Set             of Gto.location * Gto.expression
+  | Set             of location * expression
   | Label           of label
   | Goto            of label
-  | ConditionalGoto of label * Gto.expression
+  | ConditionalGoto of label * expression
   | Nop
-  | Jump			of string * Gto.location
-  | Return			of Gto.expression
-  | ProcCall		of identifier * Gto.expression list
+  | Jump			of string * location
+  | Return			of expression
+  | ProcCall		of identifier * expression list
   | Block			of instruction * (string * typ) list
 
 type function_info = {

@@ -83,8 +83,26 @@ Les 4 premières variables locales d'une fonction et leurs types sont stockés d
 J'ai également ajouté en plus la possibilité de définir des fonctions anonymes dans des expressions avec la syntaxe :
 (fun *type* (*params*) -> *instr*)(*args*)
 J'ai aussi ajouté la fonction prédéfinie scan_int() qui lit un entier entré par l'utilisateur et le renvoie pour avoir des programmes "interactifs"
-
 Dans le dossier est inclus un petit jeu de morpion qui se joue en entrant des valeurs entre 1 et 9 au clavier.
+
+
+
+Partie 5.1:
+L'analyse de vivacité et l'élimination de code mort est réalisé dans les fichiers IndexedGoto.
+La propagation des constantes et des copies sont implémentées ensemble.
+Pour optimiser, une étape d'élimination va effectuer une propagation, une analyse de vivacité et une élimination.
+Par exemple :
+    i := 3;
+	j := 2 + i;
+	print_int(j)
+sera simplement optmisé en
+	print_int(5)
+Pour la partie expression libre, j'ai commencé par ajouter une fonction d'élimination du code inatteignable avant l'optimisation.
+Cette fonction va supprimer toute instruction jamais atteinte, c'est à dire une instruction dont le chemin pour l'atteindre passe
+nécessairement par un return.
+Pour l'amélioration de l'efficacité, le calcul de point fixe se fait en construisant une liste de successeurs, de prédécesseurs et d'instructions.
+On maintient une queue qui contient à la base les instructions sans successeurs et tant qu'il y a du changement, on ajoute les prédécesseurs de l'instruction à la file.
+Le calcul de point fixe ne repasse donc jamais par une instruction dont la vivacité ne peut plus changer.
 
 J'ai tout réalisé par moi-même.
 
@@ -93,4 +111,5 @@ ex : ./compilo -pp test.cid
 
 Les extensions suivantes ne sont plus entièrement supportées :
 	GotoInterpreter.ml (TP 1.1)
+	Mémoire dynamique  (TP 3.1)
 Les autres extensions ont été mises à jour pour supporter les nouvelles constructions du langage

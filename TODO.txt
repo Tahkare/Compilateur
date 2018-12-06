@@ -1,1 +1,10 @@
-Corriger dynamic allocation/logic equality
+5.1 :
+Chaines définition
+
+5.2 :
+Allocation
+Mips ad hoc
+
+Ajouter jump aux optimisations
+Corriger dynamic allocation
+Regarder les sous-expressions communes
