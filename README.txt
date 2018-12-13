@@ -1,8 +1,11 @@
-Le compilateur contient les parties obligatoires ainsi que l'intégralité des bonus demandés.
+Le compilateur contient les parties obligatoires ainsi que l'intégralité des bonus demandés
+sauf l'allocation des registres à l'aide d'un graphe. Le graphe est fonctionnel en revanche.
+
 
 Partie 1.1:
 Break, continue et for sont traités dans le lexer, le parser et tous les fichiers de traduction.
 L'interpréteur est contenu dans le fichier GotoInterpreter.ml et la fonction interpret_goto attend l'arbre en Goto et un argument.
+
 
 Partie 1.2:
 L'utilisation des instruction combinées a été faite dans translate_expression_aux dans GotoToMips.
@@ -10,12 +13,14 @@ La simplification des expressions arithmétiques a été faite dans translate_ex
 L'utilisation réduite de la pile, la précalculation des adresses et l'utilisation des registres t2 à t9 est faite dans translate_expression_aux et binop.
 J'ai gardé dans le code seulement la version finale.
 
+
 Partie 2.1:
 Le lexer SourceLexer.mll reconnait le langage Imp ainsi que les commentaires longs comme demandé en bonus.
 En cas d'erreur, il affiche la position et le caractère erroné.
 Le préprocesseur gère les macros avec ou sans arguments et produit un fichier .pp.cid expansé.
 SourceIndentLexer.mll est le lexer basé sur l'indentation qui génère des tokens accolades et semi si besoin.
 A noter que ce lexer n'est pas forcément compatible avec le sucre syntaxique du if de la partie 2.2
+
 
 Partie 2.2;
 L'analyseur syntaxique reconnait l'ensemble du langage ainsi que le sucre syntaxique
@@ -34,6 +39,7 @@ toute déclaration, instruction ou expression mal formée.
 Il reste 5 conflits shift/reduce sur le mot-clé error qui sont liés au fait que la règle instruction peut être vide mais cela ne gêne pas la compilation
 L'extension corrigée est la déclaration multiple de variables, il manquait la liste des variables temporaires à déclarer dans la liste des symboles
 
+
 Partie 3.1:
 La vérification des bornes se fait dans GotoToMips avec deux tests à chaque accès à un bloc
 Il est possible de définir des tableaux à n dimensions initialisés ou non, c'est géré dans SourceParser
@@ -48,6 +54,7 @@ Finalement, Malloc, Free et la gestion automatique Mark&Sweep sont gérées avec
 	-> sweep
 Pour cette extension, la mémoire allouée est de base 500 octets puis est étendue de 500 octets à chaque fois que les malloc ont rempli la mémoire allouée.
 Les tableaux peuvent être initialisés dans une déclaration de variables multiple.
+
 
 Partie 3.2:
 L'entrelacement des déclarations est géré dans SourceParser
@@ -64,6 +71,7 @@ Pour les switch, il faut une absence de redondance et soit que les cas soient ex
 L'étiquette est dans l'en-tête.
 La gestion des switch se fait avec la création d'une table de sauts quand on rencontre le switch.
 
+
 Partie 4.1:
 L'appel de procédure a été réalisé par la création d'une instruction procédure.
 Un type TypVoid a été ajouté pour quand le type de retour d'une procédure n'est pas spécifié.
@@ -73,6 +81,7 @@ La différence entre les conventions est faite avec l'ajout d'un booléen de Sou
 Les appels terminaux sont détectés dans GotoToFlat et sont distingués par deux instructions et deux expressions en Flat.
 Les fonctions ont été modifiées pour lire le premier argument et son type dans a0 et a1 et le deuxième et son type dans a2 et a3.
 La valeur de retour et son type sont dans v0 et v1.
+
 
 Partie 4.2:
 Le parser a été légèrement adapté pour que main et les blocs puissent avoir des variables locales.
@@ -84,7 +93,6 @@ J'ai également ajouté en plus la possibilité de définir des fonctions anonym
 (fun *type* (*params*) -> *instr*)(*args*)
 J'ai aussi ajouté la fonction prédéfinie scan_int() qui lit un entier entré par l'utilisateur et le renvoie pour avoir des programmes "interactifs"
 Dans le dossier est inclus un petit jeu de morpion qui se joue en entrant des valeurs entre 1 et 9 au clavier.
-
 
 
 Partie 5.1:
@@ -103,9 +111,22 @@ nécessairement par un return.
 Pour l'amélioration de l'efficacité, le calcul de point fixe se fait en construisant une liste de successeurs, de prédécesseurs et d'instructions.
 On maintient une queue qui contient à la base les instructions sans successeurs et tant qu'il y a du changement, on ajoute les prédécesseurs de l'instruction à la file.
 Le calcul de point fixe ne repasse donc jamais par une instruction dont la vivacité ne peut plus changer.
+Pour la partie chaînes définition, l'analyse de vivacité stocke toutes les instructions qui sont responsables de la vivacité d'une variable.
+Quand on effectue une élimination, on garde en mémoire la liste des instructions éliminées et les variables qui étaient vivantes grâce à cette instruction sont supprimées.
+Cela permet de faire autant d'éliminations sur plusieurs passes mais sans recalculer la vivacité à chaque fois.
+Quand il n'y a plus d'éliminations, on relance un calcul de vivacité jusqu'à arrêt de l'élimination.
+Les unions étiquetées ont été adaptées pour être compatibles avec ce module.
+L'allocation dynamique a été modifiée pour être rendue compatible avec le module 4
+
+Partie 5.2:
+La construction du graphe et sa coloration ont été effectués.
+L'implémentation en assembleur n'a pas été faite.
+L'optimisation du code assembleur a été faite avec une réécriture de FlatToMips.
+Le gain obtenu avec cette réécriture sur le programme de morpion est de 1200 lignes d'assembleur sur les 4900 lignes originales.
+On a donc une amélioration sensible.
+
 
 J'ai tout réalisé par moi-même.
-
 Le preprocessing s'exécute avec l'option -pp
 ex : ./compilo -pp test.cid
 

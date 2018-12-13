@@ -16,9 +16,9 @@ let step i =
 		print_int i; print_string " : ";
 		List.iter (fun s -> print_string ((string_of_int s)^" ")) tbl.(i);
 		print_string "\n";
-		List.iter (fun s -> print_string (s^" ")) a.(i);
+		List.iter (fun (s,n) -> print_string (s^" ");print_int n;print_string " ") a.(i);
 		print_string "\n";
-		List.iter (fun s -> print_string (s^" ")) b.(i);
+		List.iter (fun (s,n) -> print_string (s^" ");print_int n;print_string " ") b.(i);
 		print_string "\n";
 	done;
 	
@@ -35,18 +35,34 @@ let step i =
 		
 	in let is_alive n l =
 		 match l with
-		 | IGto.Identifier(Id(s))  -> List.exists (fun x -> x=s) (liveness.live_out.(n)) 
+		 | IGto.Identifier(Id(s))  -> List.exists (fun (x,m) -> x=s) (liveness.live_out.(n)) 
 		 | _ -> true
 	
+	in let has_eliminated tbl =
+		let b = ref false in
+		for i=0 to ((Array.length tbl)-1) do
+			if tbl.(i) = true then b := true 
+		done;
+		!b
+	
 	in let rec elim i =
-		 match i with
-		 | (n,IGto.Sequence(i1,i2))	-> 	let (i1,b1) = elim i1 in
-										let (i2,b2) = elim i2 in
-										((n,IGto.Sequence(i1, i2)),(b1 || b2))
-		 | (n,IGto.Block(j,vl))		->  let (j,b) = elim j in
-										((n,IGto.Block(j,vl)),b)
-		 | (n,IGto.Set(l,e))		-> if is_alive n l || has_fun_call e then (i,false) else ((n,IGto.Nop),true) 
-		 | _						-> (i,false)
+		let eliminated = Array.make (Array.length liveness.live_in) false in
+		let rec elim_aux i =
+			let (n,j) = i in
+			liveness.live_out.(n) <- List.fold_left (fun acc (hd,m) -> if eliminated.(m) then acc else (hd,m)::acc) [] liveness.live_out.(n);
+			liveness.live_in.(n) <- List.fold_left (fun acc (hd,m) -> if eliminated.(m) then acc else (hd,m)::acc) [] liveness.live_in.(n);
+			match i with
+			| (n,IGto.Sequence(i1,i2))	-> 	let (i1,b1) = elim i1 in
+											let (i2,b2) = elim i2 in
+											((n,IGto.Sequence(i1, i2)),(b1 || b2))
+			| (n,IGto.Block(j,vl))		->  let (j,b) = elim j in
+											((n,IGto.Block(j,vl)),b)
+			| (n,IGto.Set(l,e))			-> if is_alive n l || has_fun_call e then (i,false) else begin eliminated.(n) <- true; ((n,IGto.Nop),true) end
+			| _							-> (i,false)
+		in let (i1,b) = elim_aux i
+		in if b then elim_aux i1 else (i1,has_eliminated eliminated)
+		
+	
 	in elim const_propagation
 
 let unreachable_elim i =

@@ -102,7 +102,7 @@ let rec translate_loop (i : ImpAST.typed_instruction) c_label b_label rename =
 												Gto.Set(Gto.BlockAccess(s,Gto.Literal(Int(n))),Gto.LabelAddr(instr_label)) ++
 												Gto.Goto(end_label) ++
 												Gto.Label(instr_label) ++
-												translate_loop i c_label b_label rename ++
+												Gto.Block(translate_loop i c_label b_label rename,[]) ++
 												Gto.Goto(after_branch_label)
 								| (t,i)::tl -> 	let instr_label = new_label () in
 												let next_label = new_label () in
@@ -110,7 +110,7 @@ let rec translate_loop (i : ImpAST.typed_instruction) c_label b_label rename =
 												Gto.Set(Gto.BlockAccess(s,Gto.Literal(Int(n))),Gto.LabelAddr(instr_label)) ++
 												Gto.Goto(next_label) ++
 												Gto.Label(instr_label) ++
-												translate_loop i c_label b_label rename ++
+												Gto.Block(translate_loop i c_label b_label rename,[]) ++
 												Gto.Goto(after_branch_label) ++
 												translate_list (n+1) s next_label end_label after_branch_label tl
 								| _ -> failwith "Expected a non-empty list"

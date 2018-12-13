@@ -39,8 +39,8 @@ let accessibility i =
 											definitions.(n) <- (l,e)::definitions.(n);
 											let o = List.hd tbl.(n) in
 											if o <> -1 then definitions.(o) <- definitions.(n)@definitions.(o)
-		| (n,IGto.ConditionalGoto(l,e)) ->	List.iter (fun o -> if o <> -1 then definitions.(o) <- definitions.(n)@definitions.(o)) tbl.(n);
-		| (n,IGto.Jump(s,l))			->  (*todo*) ()
+		| (n,IGto.ConditionalGoto(l,e)) ->	List.iter (fun o -> if o <> -1 then definitions.(o) <- definitions.(n)@definitions.(o)) tbl.(n)
+		| (n,IGto.Jump(s,l))			->  List.iter (fun o -> if o <> -1 then definitions.(o) <- definitions.(n)@definitions.(o)) tbl.(n)
 		| (n,_)							-> 	let o = List.hd tbl.(n) in
 											if o <> -1 then definitions.(o) <- definitions.(n)@definitions.(o)
 	in build_definitions i;

@@ -9,7 +9,6 @@ let rec make_list n = match n with
   | _ -> ("tmp"^(string_of_int n),TypInt)::(make_list (n-1))
 
 let max_depth = ref 0
-let jumps = ref []
 
 let tmp depth = Flat.Identifier(Id("tmp"^(string_of_int depth)))	(* Var tmp de valeur depth sous forme de location *)
 let tmpl depth = Flat.Location(tmp depth)							(* Var tmp de valeur depth sous forme de value *)
@@ -55,8 +54,7 @@ let rec translate_instruction terminal = function
   | Gto.ConditionalGoto(l,e) ->     let e = translate_expression false 0 e in
 									e ++ Flat.ConditionalGoto(l, tmpl 0)								
   | Gto.Nop ->						Flat.Nop
-  | Gto.Jump(s,l) ->				jumps := (s,TypArray(TypAny))::(!jumps);
-									(match (translate_location 0 l) with code,l ->
+  | Gto.Jump(s,l) ->				(match (translate_location 0 l) with code,l ->
 														code ++ Flat.Jump(s,l))
   | Gto.Return(e) ->				let e = translate_expression true 0 e in
 									e ++ Flat.Return(tmpl 0)
@@ -67,8 +65,8 @@ let rec translate_instruction terminal = function
 (* On traduit le programme en Flat *)
 let translate_program p = Flat.({
   globals = Gto.(p.globals);
-  functions = Symb_Tbl.fold (fun id f tbl -> max_depth := 0; jumps := [];
+  functions = Symb_Tbl.fold (fun id f tbl -> max_depth := 0;
 							let code = translate_instruction true Gto.(f.code) in
-							let code = Flat.Block(code, (make_list !max_depth)@(!jumps)) in
+							let code = Flat.Block(code, (make_list !max_depth)) in
 							Symb_Tbl.add id Flat.({signature= Gto.(f.signature); code=code; locals = Gto.(f.locals); recursive = Gto.(f.recursive)}) tbl) Gto.(p.functions) (Symb_Tbl.empty);
 })

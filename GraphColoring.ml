@@ -5,9 +5,9 @@ type color = int
 type coloring = color NodeMap.t
 
 let rec pick_color g c s =
-	let nl = Graph.g g s in
-	let cl = List.fold_left (fun acc x -> (NodeMap.find c x)::acc) [] nl in
-	let n,b = List.fold_left (fun (n,b) x -> if b then n else if n <> x then (n,true) else (n+1,false)) (0,false) cl in
+	let nl = Graph.neighbours g s in
+	let cl = List.fold_left (fun acc x -> (NodeMap.find x c)::acc) [] nl in
+	let n,b = List.fold_left (fun (n,b) x -> if b then (n,b) else if n <> x then (n,true) else (n+1,false)) (0,false) cl in
 	if b then n else n+1
 
 let rec colorize g =

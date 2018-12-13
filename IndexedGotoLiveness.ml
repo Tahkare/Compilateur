@@ -4,8 +4,8 @@ open CommonAST
 type succ_table = int list array
 
 type liveness_info = 
-	{ live_in  : string list array;
-	  live_out : string list array }
+	{ live_in  : (string * int) list array;
+	  live_out : (string * int) list array }
 
 let unique = List.sort_uniq compare 
 
@@ -27,7 +27,27 @@ let mk_succ_table i =
 	| _							-> 	-1
   
   in let find_block s i =
-	-1 (*todo*)
+	let cpt = ref 0
+	
+	in let rec explore j acc =
+		match j with
+		| (n,IGto.Sequence(i1,i2))	-> 	let a1 = explore i1 acc in
+										explore i2 (a1@acc)
+		| (n,IGto.Label(l))			->	cpt := !cpt+1;
+										if (!cpt mod 2) = 0 then n::acc else acc
+		| (n,_)						->  acc
+	
+	in let rec find s j =
+		match j with
+		| (n,IGto.Sequence(i1,i2)) 	-> 	let a = find s i1 in
+										let b = find s i2 in
+										if a = [] then b else a
+		| (n,IGto.Block(i,vl))		->	if (List.length vl = 1) && (List.hd vl = (s,TypArray(TypAny)))
+										then explore j [] else find s i
+		| (n,_)						-> 	[]
+	in match find s i with
+		| hd::tl -> tl
+		| [] -> []
   
   in let tbl = Array.make ((find_length i)+1) []
   
@@ -39,7 +59,7 @@ let mk_succ_table i =
 	| (m,IGto.Goto(l))					->  tbl.(m) <- [find_label l i]
 	| (m,IGto.ConditionalGoto(l,e))		-> 	tbl.(m) <- [find_label l i;n]
 	| (m,IGto.Return(e))				-> 	tbl.(m) <- [-1]
-	| (m,IGto.Jump(s,l))				->  tbl.(m) <- [find_block s i]
+	| (m,IGto.Jump(s,l))				->  tbl.(m) <- find_block s i
 	| (m,IGto.Block((k,i),vl))			->  tbl.(m) <- [k];
 											mk_succ_aux (k,i) n
 	| (m,_)								-> 	tbl.(m) <- [n]
@@ -76,19 +96,19 @@ let liveness i =
 	let explored = Array.make (Array.length succ_tbl) false in
 	
 	let remove_from_list s n =
-		let rec remove s l =
+		let rec remove s l acc =
 			match l with
-			| [] 	 -> []
-			| hd::tl -> if hd=s then tl else let l = remove s tl in hd::l
-		in let l = remove s (live_in.(n))
+			| [] 	 -> acc
+			| (hd,m)::tl -> if hd=s then remove s tl acc else remove s tl ((hd,m)::acc)
+		in let l = remove s (live_in.(n)) []
 		in live_in.(n) <- l
 	
 	in let add_to_list s n =
-		let rec add s l =
+		let rec add s l acc =
 			match l with
-			| [] -> [s]
-			| hd::tl -> if hd=s then l else let l = add s tl in hd::l
-		in let l = add s (live_in.(n))
+			| [] -> (s,n)::acc
+			| (hd,m)::tl -> if hd=s && m=n then acc@tl else add s tl ((hd,m)::acc)
+		in let l = add s (live_in.(n)) []
 		in live_in.(n) <- l
 		
 	in let rec add_alive_expr n e =
@@ -150,7 +170,10 @@ let liveness i =
 													live_out.(n) <- unique live_out.(n);
 													live_in.(n) <- live_out.(n);
 													add_alive_expr n e
-				| (n,IGto.Jump(s,l))			->	(*todo*) ()
+				| (n,IGto.Jump(s,l))			->	live_out.(n) <- [];
+													List.iter (fun k -> if k <> -1 then live_out.(n) <- (live_out.(n))@(live_in.(k))) succ_tbl.(n);
+													live_out.(n) <- unique live_out.(n);
+													live_in.(n) <- live_out.(n)
 				| (n,IGto.ProcCall(i,el))		->	let o = List.hd succ_tbl.(n) in
 													if o <> -1 then live_out.(n) <- live_in.(o);
 													live_in.(n) <- live_out.(n);
